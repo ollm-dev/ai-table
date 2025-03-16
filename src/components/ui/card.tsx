@@ -1,0 +1,124 @@
+/**
+ * 卡片UI组件
+ * @module Card
+ */
+import * as React from "react"
+import { cn } from "@/lib/utils"
+
+/**
+ * 卡片根组件
+ * @param {Object} props - 组件属性
+ * @param {React.ReactNode} props.children - 子元素
+ * @param {string} [props.className] - 额外的CSS类名
+ * @returns {JSX.Element} 渲染的组件
+ */
+const Card = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn(
+      "rounded-lg border bg-card text-card-foreground shadow-sm",
+      className
+    )}
+    {...props}
+  />
+))
+Card.displayName = "Card"
+
+/**
+ * 卡片头部组件
+ * @param {Object} props - 组件属性
+ * @param {React.ReactNode} props.children - 子元素
+ * @param {string} [props.className] - 额外的CSS类名
+ * @returns {JSX.Element} 渲染的组件
+ */
+const CardHeader = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("flex flex-col space-y-1.5 p-6", className)}
+    {...props}
+  />
+))
+CardHeader.displayName = "CardHeader"
+
+/**
+ * 卡片标题组件
+ * @param {Object} props - 组件属性
+ * @param {React.ReactNode} props.children - 子元素
+ * @param {string} [props.className] - 额外的CSS类名
+ * @returns {JSX.Element} 渲染的组件
+ */
+const CardTitle = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLHeadingElement>
+>(({ className, ...props }, ref) => (
+  <h3
+    ref={ref}
+    className={cn(
+      "text-2xl font-semibold leading-none tracking-tight",
+      className
+    )}
+    {...props}
+  />
+))
+CardTitle.displayName = "CardTitle"
+
+/**
+ * 卡片描述组件
+ * @param {Object} props - 组件属性
+ * @param {React.ReactNode} props.children - 子元素
+ * @param {string} [props.className] - 额外的CSS类名
+ * @returns {JSX.Element} 渲染的组件
+ */
+const CardDescription = React.forwardRef<
+  HTMLParagraphElement,
+  React.HTMLAttributes<HTMLParagraphElement>
+>(({ className, ...props }, ref) => (
+  <p
+    ref={ref}
+    className={cn("text-sm text-muted-foreground", className)}
+    {...props}
+  />
+))
+CardDescription.displayName = "CardDescription"
+
+/**
+ * 卡片内容组件
+ * @param {Object} props - 组件属性 
+ * @param {React.ReactNode} props.children - 子元素
+ * @param {string} [props.className] - 额外的CSS类名
+ * @returns {JSX.Element} 渲染的组件
+ */
+const CardContent = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div ref={ref} className={cn("p-6 pt-0", className)} {...props} />
+))
+CardContent.displayName = "CardContent"
+
+/**
+ * 卡片底部组件
+ * @param {Object} props - 组件属性
+ * @param {React.ReactNode} props.children - 子元素
+ * @param {string} [props.className] - 额外的CSS类名
+ * @returns {JSX.Element} 渲染的组件
+ */
+const CardFooter = React.forwardRef<
+  HTMLDivElement,
+  React.HTMLAttributes<HTMLDivElement>
+>(({ className, ...props }, ref) => (
+  <div
+    ref={ref}
+    className={cn("flex items-center p-6 pt-0", className)}
+    {...props}
+  />
+))
+CardFooter.displayName = "CardFooter"
+
+export { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } 

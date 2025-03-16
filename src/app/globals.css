@@ -1,0 +1,143 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+}
+
+.dark {
+  --background: #0f172a;
+  --foreground: #f8fafc;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+}
+
+/* 自定义文本区域样式 */
+.textarea-light {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* 自定义卡片样式 */
+.card-light {
+  background-color: #ffffff;
+  color: #0f172a;
+}
+
+/* 自定义徽章样式 */
+.badge-required {
+  color: #ef4444 !important;
+  border-color: #fecaca !important;
+  background-color: #fef2f2 !important;
+}
+
+/* 自定义按钮样式 */
+.btn-primary {
+  background-color: #0ea5e9 !important;
+  color: #ffffff !important;
+}
+
+.btn-primary:hover {
+  background-color: #0284c7 !important;
+}
+
+.btn-outline {
+  background-color: transparent !important;
+  color: #0f172a !important;
+  border-color: #e2e8f0 !important;
+}
+
+.btn-outline:hover {
+  background-color: #f1f5f9 !important;
+}
+
+/* 自定义文本计数器样式 */
+.text-counter {
+  color: #64748b;
+  font-size: 0.75rem;
+}
+
+.text-counter-error {
+  color: #ef4444;
+}
+
+/**
+ * 全局文本样式修复
+ * 确保所有文本元素具有足够的对比度和不透明度
+ */
+.form-text, 
+.input-text, 
+.textarea-content,
+.label-text,
+label,
+span,
+p,
+h1, h2, h3, h4, h5, h6,
+input,
+textarea,
+button,
+.text-gray-700,
+.text-gray-800,
+.text-sm {
+  color: #000000 !important; /* 强制使用纯黑色 */
+  opacity: 1 !important; /* 强制使用完全不透明 */
+  text-shadow: none !important; /* 移除可能的文本阴影 */
+}
+
+/* 绿色文本专用样式 */
+.text-emerald-600 {
+  color: #047857 !important;
+  opacity: 1 !important;
+}
+
+/* 白色按钮文本 */
+.text-white, 
+.bg-blue-600 {
+  color: #ffffff !important;
+  opacity: 1 !important;
+}
+
+/* 自定义单选按钮样式 */
+.radio-option {
+  display: flex;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  border: 1px solid #e5e7eb;
+  background-color: white;
+  transition: all 0.2s;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.radio-option:hover {
+  border-color: #93c5fd;
+}
+
+.radio-option[data-state="checked"] {
+  border-color: #2563eb;
+  background-color: #eff6ff;
+}
+
+.radio-option-selected {
+  border-color: #2563eb;
+  background-color: #eff6ff;
+}
+
+/* 选中状态的单选按钮 */
+[data-state="checked"] {
+  border-color: #0ea5e9 !important;
+}
+
+/* 单选按钮组布局 */
+.radio-group-horizontal {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
