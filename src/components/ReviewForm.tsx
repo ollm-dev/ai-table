@@ -57,6 +57,18 @@ export default function ReviewForm({ data }: ReviewFormProps) {
   // 添加AI建议数据状态
   const [aiRecommendationsAvailable, setAiRecommendationsAvailable] = useState(false);
   
+  // 添加项目信息编辑状态
+  const [projectInfo, setProjectInfo] = useState({
+    projectTitle: "",
+    projectType: "",
+    researchField: "",
+    applicantName: "",
+    applicationId: ""
+  });
+  
+  // 添加编辑状态跟踪
+  const [editingField, setEditingField] = useState<string | null>(null);
+  
   // 在组件加载时调用fetchReviewData
   useEffect(() => {
     // 如果有项目ID，则获取评审数据
@@ -199,6 +211,15 @@ export default function ReviewForm({ data }: ReviewFormProps) {
     await simulateStep("✨ 分析完成: 已生成评审建议", "complete", 500);
     
     setIsAnalyzing(false);
+    
+    // 分析完成后，设置项目信息
+    setProjectInfo({
+      projectTitle: data.projectInfo.projectTitle,
+      projectType: data.projectInfo.projectType,
+      researchField: data.projectInfo.researchField,
+      applicantName: data.projectInfo.applicantName,
+      applicationId: data.projectInfo.applicationId
+    });
     
     // 分析完成后，设置AI建议可用状态
     // 实际项目中，这里应该是从后端获取AI建议数据
@@ -369,17 +390,46 @@ export default function ReviewForm({ data }: ReviewFormProps) {
     }
   };
   
+  /**
+   * 处理项目信息字段编辑
+   * @param {string} field - 字段名称
+   * @param {string} value - 新值
+   */
+  const handleProjectInfoChange = (field: string, value: string) => {
+    setProjectInfo(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+  
+  /**
+   * 开始编辑字段
+   * @param {string} field - 要编辑的字段名称
+   */
+  const startEditing = (field: string) => {
+    // 只有在AI建议可用时才允许编辑（即文件已上传并分析完成）
+    if (aiRecommendationsAvailable) {
+      setEditingField(field);
+    }
+  };
+  
+  /**
+   * 结束编辑字段
+   */
+  const stopEditing = () => {
+    setEditingField(null);
+  };
+  
   return (
-    <form className="w-full max-w-6xl mx-auto">
-      <Card className="mb-8 shadow-xl overflow-hidden rounded-xl bg-white/90 backdrop-blur-sm hover:shadow-2xl transition-all duration-300 border border-gray-100">
-        <CardHeader className="bg-gradient-to-r from-primary-50 via-primary-100 to-primary-50 border-b border-primary-200 py-6">
+    <form className="w-full max-w-7xl mx-auto bg-gradient-to-br from-gray-50 to-white">
+      <Card className="mb-8 overflow-hidden rounded-2xl bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+        <CardHeader className="bg-gradient-to-r from-primary-50 via-primary-100 to-primary-50 border-b border-primary-100 py-8">
           <div className="flex justify-between items-center">
             <div className="animate-fadeIn">
-              <CardTitle className="text-2xl font-bold text-gray-900 flex items-center">
-                <span className="inline-block w-2 h-8 bg-primary-500 rounded mr-3"></span>
+              <CardTitle className="text-3xl font-bold text-gray-900 tracking-tight">
+                <span className="inline-block w-1 h-8 bg-gradient-to-b from-primary-500 to-primary-600 rounded-full mr-4 align-middle"></span>
                 {data.formTitle}
               </CardTitle>
-              <CardDescription className="text-gray-600 mt-2 ml-5 italic">{data.formSubtitle}</CardDescription>
             </div>
             
             {/* PDF上传功能 */}
@@ -397,22 +447,22 @@ export default function ReviewForm({ data }: ReviewFormProps) {
                 <Button
                   type="button"
                   variant="outline"
-                  className="flex items-center border-primary-500 text-primary-500 hover:bg-primary-50 transition-all duration-300 rounded-full shadow-sm hover:shadow"
+                  className="flex items-center border-primary-200 text-primary-600 hover:bg-primary-50 transition-all duration-300 rounded-full shadow-sm hover:shadow px-6"
                   onClick={() => fileInputRef.current?.click()}
                 >
-                  <UploadIcon className="h-4 w-4 mr-1 animate-bounce-subtle" />
+                  <UploadIcon className="h-4 w-4 mr-2" />
                   上传PDF文件
                 </Button>
               ) : (
-                <div className="flex items-center bg-white/90 px-4 py-2 rounded-full border border-gray-200 shadow-sm">
+                <div className="flex items-center bg-white/80 px-5 py-2.5 rounded-full border border-primary-200 shadow-sm">
                   <FileIcon className="h-4 w-4 text-primary-500 mr-2" />
                   <span className="text-sm text-gray-700 max-w-[150px] truncate">{pdfFile.name}</span>
-                  <div className="flex ml-2">
+                  <div className="flex ml-3">
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="h-6 w-6 p-0 text-gray-500 hover:text-red-500 rounded-full"
+                      className="h-7 w-7 p-0 text-gray-400 hover:text-red-500 rounded-full"
                       onClick={handleRemovePdf}
                     >
                       <XIcon className="h-4 w-4" />
@@ -421,7 +471,7 @@ export default function ReviewForm({ data }: ReviewFormProps) {
                       type="button"
                       variant="default"
                       size="sm"
-                      className="ml-2 h-7 text-xs rounded-full bg-primary-500 hover:bg-primary-600 transition-colors"
+                      className="ml-2 h-7 text-xs rounded-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 transition-all duration-300 shadow-md hover:shadow-lg"
                       onClick={handleUploadPdf}
                       disabled={uploading}
                     >
@@ -435,68 +485,207 @@ export default function ReviewForm({ data }: ReviewFormProps) {
           
           {/* 显示上传错误信息 */}
           {uploadError && (
-            <div className="mt-2 text-sm text-red-500 bg-red-50 p-2 rounded-md border border-red-100 animate-fadeIn">
-              <span className="font-bold">错误：</span>{uploadError}
+            <div className="mt-4 text-sm text-red-500 bg-red-50/50 backdrop-blur-sm p-3 rounded-xl border border-red-100 animate-fadeIn">
+              <span className="font-medium">错误：</span>{uploadError}
             </div>
           )}
         </CardHeader>
-        <CardContent className="p-6">
-          {/* 项目信息部分 */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8 bg-gradient-to-r from-gray-50 to-gray-100 p-5 rounded-xl border border-gray-200 shadow-inner transition-all duration-300 hover:shadow-md">
-            <div className="space-y-4">
-              <div className="flex flex-col glass-card p-3 rounded-lg transition-all duration-300 hover:translate-y-[-2px]">
-                <span className="text-sm text-gray-500 mb-1 font-bold">项目名称</span>
-                <span className="font-medium text-gray-900">{data.projectInfo.projectTitle}</span>
+        <CardContent className="p-8">
+          {/* 个人信息部分 */}
+          <h3 className="text-xl font-semibold text-gray-900 flex items-center mb-6">
+            <span className="inline-block w-1 h-6 bg-gradient-to-b from-primary-500 to-primary-600 rounded-full mr-4"></span>
+            个人信息
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12 bg-gradient-to-br from-gray-50 to-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-500">
+            
+            <div className="space-y-5">
+              <div 
+                className={`group flex flex-col glass-morphism p-4 rounded-xl transition-all duration-500 ${
+                  aiRecommendationsAvailable ? "hover:translate-y-[-2px] cursor-pointer" : "opacity-80"
+                }`}
+                onClick={() => startEditing('projectTitle')}
+              >
+                <span className="text-sm text-gray-500 mb-2 font-medium">项目名称</span>
+                {editingField === 'projectTitle' ? (
+                  <input
+                    type="text"
+                    value={projectInfo.projectTitle}
+                    onChange={(e) => handleProjectInfoChange('projectTitle', e.target.value)}
+                    onBlur={stopEditing}
+                    autoFocus
+                    className="font-medium text-gray-900 bg-white/50 backdrop-blur border border-primary-100 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-primary-200 transition-all duration-300"
+                  />
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <span className={`font-medium text-gray-800 ${aiRecommendationsAvailable ? "group-hover:text-primary-600" : ""} transition-colors duration-300`}>
+                      {projectInfo.projectTitle || (aiRecommendationsAvailable ? "加载中..." : "")}
+                    </span>
+                    {aiRecommendationsAvailable && (
+                      <span className="text-primary-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                        </svg>
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
-              <div className="flex flex-col glass-card p-3 rounded-lg transition-all duration-300 hover:translate-y-[-2px]">
-                <span className="text-sm text-gray-500 mb-1 font-bold">项目类别</span>
-                <span className="font-medium text-gray-900">{data.projectInfo.projectType}</span>
+              <div 
+                className={`group flex flex-col glass-morphism p-4 rounded-xl transition-all duration-500 ${
+                  aiRecommendationsAvailable ? "hover:translate-y-[-2px] cursor-pointer" : "opacity-80"
+                }`}
+                onClick={() => startEditing('projectType')}
+              >
+                <span className="text-sm text-gray-500 mb-2 font-medium">项目类别</span>
+                {editingField === 'projectType' ? (
+                  <input
+                    type="text"
+                    value={projectInfo.projectType}
+                    onChange={(e) => handleProjectInfoChange('projectType', e.target.value)}
+                    onBlur={stopEditing}
+                    autoFocus
+                    className="font-medium text-gray-900 bg-white/50 backdrop-blur border border-primary-100 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-primary-200 transition-all duration-300"
+                  />
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <span className={`font-medium text-gray-800 ${aiRecommendationsAvailable ? "group-hover:text-primary-600" : ""} transition-colors duration-300`}>
+                      {projectInfo.projectType || (aiRecommendationsAvailable ? "加载中..." : "")}
+                    </span>
+                    {aiRecommendationsAvailable && (
+                      <span className="text-primary-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                        </svg>
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
-              <div className="flex flex-col glass-card p-3 rounded-lg transition-all duration-300 hover:translate-y-[-2px]">
-                <span className="text-sm text-gray-500 mb-1 font-bold">研究领域</span>
-                <span className="font-medium text-gray-900">{data.projectInfo.researchField}</span>
+              <div 
+                className={`group flex flex-col glass-morphism p-4 rounded-xl transition-all duration-500 ${
+                  aiRecommendationsAvailable ? "hover:translate-y-[-2px] cursor-pointer" : "opacity-80"
+                }`}
+                onClick={() => startEditing('researchField')}
+              >
+                <span className="text-sm text-gray-500 mb-2 font-medium">研究领域</span>
+                {editingField === 'researchField' ? (
+                  <input
+                    type="text"
+                    value={projectInfo.researchField}
+                    onChange={(e) => handleProjectInfoChange('researchField', e.target.value)}
+                    onBlur={stopEditing}
+                    autoFocus
+                    className="font-medium text-gray-900 bg-white/50 backdrop-blur border border-primary-100 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-primary-200 transition-all duration-300"
+                  />
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <span className={`font-medium text-gray-800 ${aiRecommendationsAvailable ? "group-hover:text-primary-600" : ""} transition-colors duration-300`}>
+                      {projectInfo.researchField || (aiRecommendationsAvailable ? "加载中..." : "")}
+                    </span>
+                    {aiRecommendationsAvailable && (
+                      <span className="text-primary-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                        </svg>
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
-            <div className="space-y-4">
-              <div className="flex flex-col glass-card p-3 rounded-lg transition-all duration-300 hover:translate-y-[-2px]">
-                <span className="text-sm text-gray-500 mb-1 font-bold">申请人姓名</span>
-                <span className="font-medium text-gray-900">{data.projectInfo.applicantName}</span>
+            <div className="space-y-5">
+              <div 
+                className={`group flex flex-col glass-morphism p-4 rounded-xl transition-all duration-500 ${
+                  aiRecommendationsAvailable ? "hover:translate-y-[-2px] cursor-pointer" : "opacity-80"
+                }`}
+                onClick={() => startEditing('applicantName')}
+              >
+                <span className="text-sm text-gray-500 mb-2 font-medium">申请人姓名</span>
+                {editingField === 'applicantName' ? (
+                  <input
+                    type="text"
+                    value={projectInfo.applicantName}
+                    onChange={(e) => handleProjectInfoChange('applicantName', e.target.value)}
+                    onBlur={stopEditing}
+                    autoFocus
+                    className="font-medium text-gray-900 bg-white/50 backdrop-blur border border-primary-100 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-primary-200 transition-all duration-300"
+                  />
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <span className={`font-medium text-gray-800 ${aiRecommendationsAvailable ? "group-hover:text-primary-600" : ""} transition-colors duration-300`}>
+                      {projectInfo.applicantName || (aiRecommendationsAvailable ? "加载中..." : "")}
+                    </span>
+                    {aiRecommendationsAvailable && (
+                      <span className="text-primary-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                        </svg>
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
-              <div className="flex flex-col glass-card p-3 rounded-lg transition-all duration-300 hover:translate-y-[-2px]">
-                <span className="text-sm text-gray-500 mb-1 font-bold">申请代码</span>
-                <span className="font-medium text-gray-900">{data.projectInfo.applicationId}</span>
+              <div 
+                className={`group flex flex-col glass-morphism p-4 rounded-xl transition-all duration-500 ${
+                  aiRecommendationsAvailable ? "hover:translate-y-[-2px] cursor-pointer" : "opacity-80"
+                }`}
+                onClick={() => startEditing('applicationId')}
+              >
+                <span className="text-sm text-gray-500 mb-2 font-medium">申请代码</span>
+                {editingField === 'applicationId' ? (
+                  <input
+                    type="text"
+                    value={projectInfo.applicationId}
+                    onChange={(e) => handleProjectInfoChange('applicationId', e.target.value)}
+                    onBlur={stopEditing}
+                    autoFocus
+                    className="font-medium text-gray-900 bg-white/50 backdrop-blur border border-primary-100 rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-primary-200 transition-all duration-300"
+                  />
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <span className={`font-medium text-gray-800 ${aiRecommendationsAvailable ? "group-hover:text-primary-600" : ""} transition-colors duration-300`}>
+                      {projectInfo.applicationId || (aiRecommendationsAvailable ? "加载中..." : "")}
+                    </span>
+                    {aiRecommendationsAvailable && (
+                      <span className="text-primary-500 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                          <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
+                        </svg>
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
           </div>
           
           {/* 评估选项部分 */}
-          <div className="space-y-6 mb-8 animate-slideInUp" style={{ animationDelay: '0.2s' }}>
-            <div className="flex justify-between items-center pb-2 border-b-2 border-primary-100">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                <span className="inline-block w-2 h-6 bg-primary-500 rounded mr-2"></span>
+          <div className="space-y-8 mb-12 animate-slideInUp" style={{ animationDelay: '0.2s' }}>
+            <div className="flex justify-between items-center pb-3 border-b-2 border-primary-100">
+              <h3 className="text-xl font-semibold text-gray-900 flex items-center">
+                <span className="inline-block w-1 h-6 bg-gradient-to-b from-primary-500 to-primary-600 rounded-full mr-4"></span>
                 评估选项
               </h3>
-              <div className="text-sm text-primary-500 font-medium">
+              <div className="text-sm text-primary-600 font-medium">
                 {isAnalyzing ? "实时分析进行中..." : pdfFile ? "准备开始分析..." : "上传文件后开始分析"}
               </div>
             </div>
             
-            {/* 修改为两列布局：左侧评估选项，右侧AI思考过程 */}
-            <div className="flex flex-col lg:flex-row gap-6">
-              {/* 左侧：评估选项内容 - 自适应宽度 */}
+            {/* 修改评估选项的样式 */}
+            <div className="flex flex-col lg:flex-row gap-8">
               <div className="flex-1 order-2 lg:order-1">
-                <div className="space-y-5">
+                <div className="space-y-6">
                   {data.evaluationSections.map((section, sectionIndex) => (
                     <div 
                       key={section.id} 
-                      className="space-y-3 p-5 rounded-xl hover:bg-gray-50 transition-all duration-300 border border-gray-100 shadow-sm hover:shadow-md animate-fadeIn"
+                      className="space-y-4 p-6 rounded-2xl hover:bg-gray-50/50 transition-all duration-500 border border-gray-100 shadow-sm hover:shadow-lg animate-fadeIn backdrop-blur-sm"
                       style={{ animationDelay: `${0.1 * sectionIndex}s` }}
                     >
                       <div className="flex flex-col">
-                        <div className="flex items-center mb-3">
-                          <h4 className="font-medium text-gray-900">{section.title}</h4>
+                        <div className="flex items-center mb-4">
+                          <h4 className="font-medium text-gray-800">{section.title}</h4>
                           {section.required && (
-                            <Badge variant="required" className="ml-2 animate-pulse-subtle">
+                            <Badge variant="required" className="ml-2 bg-red-50 text-red-600 border border-red-100">
                               必填
                             </Badge>
                           )}
@@ -507,10 +696,10 @@ export default function ReviewForm({ data }: ReviewFormProps) {
                             <div 
                               key={index} 
                               onClick={() => handleRadioChange(section.id, option)}
-                              className={`flex items-center justify-center px-6 py-2 rounded-full transition-all duration-300 cursor-pointer transform hover:scale-105 ${
+                              className={`flex items-center justify-center px-8 py-2.5 rounded-xl transition-all duration-500 cursor-pointer transform hover:scale-105 ${
                                 formState.evaluations[section.id] === option 
                                   ? "bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg" 
-                                  : "bg-white text-gray-700 border border-gray-200 hover:border-primary-300"
+                                  : "bg-white text-gray-700 border border-gray-200 hover:border-primary-200 hover:bg-primary-50/10"
                               }`}
                             >
                               <span className="cursor-pointer font-medium">
@@ -521,69 +710,45 @@ export default function ReviewForm({ data }: ReviewFormProps) {
                         </div>
                       </div>
                       
-                      {/* AI建议部分 - 只有在AI建议可用时才显示 */}
+                      {/* AI建议部分 */}
                       {aiRecommendationsAvailable && showEvaluationAI && (
-                        <div className="flex items-center mt-3 p-2 bg-gray-50 rounded-lg border border-gray-100 animate-fadeIn">
-                          <span className="text-gray-500 mr-2 font-medium">AI建议:</span>
+                        <div className="flex items-center mt-4 p-3 bg-gray-50/50 rounded-xl border border-gray-100 animate-fadeIn backdrop-blur-sm">
+                          <span className="text-gray-600 mr-3 font-medium">AI建议:</span>
                           <Badge className={`${
                             section.id === 'maturity' && section.aiRecommendation === '熟悉' ? 'bg-gradient-to-r from-green-50 to-green-100 text-green-700 border-green-200' :
-                            section.id === 'rating' && section.aiRecommendation === '优' ? 'bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 border-blue-200' :
+                            section.id === 'rating' && section.aiRecommendation === '优' ? 'bg-gradient-to-r from-primary-50 to-primary-100 text-primary-700 border-primary-200' :
                             section.id === 'funding' && section.aiRecommendation === '优先资助' ? 'bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 border-purple-200' :
-                            'bg-gradient-to-r from-secondary-50 to-secondary-100 text-secondary-700 border-secondary-200'
-                          } hover:bg-opacity-80 border shadow-sm transform hover:scale-105 transition-all duration-300`}>
+                            'bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 border-gray-200'
+                          } hover:bg-opacity-80 border shadow-sm transform hover:scale-105 transition-all duration-300 px-4 py-1 rounded-full`}>
                             {section.aiRecommendation}
                           </Badge>
                         </div>
                       )}
                     </div>
                   ))}
-                  
-                  {/* 显示AI建议按钮 - 只有在AI建议可用时才显示 */}
-                  {aiRecommendationsAvailable && (
-                    <div className="flex justify-center mt-6">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        type="button"
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          setShowEvaluationAI(!showEvaluationAI);
-                        }}
-                        className={`btn-outline transition-all duration-300 rounded-full px-6 transform hover:scale-105 ${
-                          showEvaluationAI 
-                            ? "bg-secondary-100 text-secondary-700 border-secondary-300 shadow-inner" 
-                            : "shadow hover:shadow-md"
-                        }`}
-                      >
-                        <LightbulbIcon className={`h-4 w-4 mr-2 ${showEvaluationAI ? 'text-yellow-500 animate-pulse-slow' : ''}`} />
-                        {showEvaluationAI ? "隐藏AI建议" : "显示AI建议"}
-                      </Button>
-                    </div>
-                  )}
                 </div>
               </div>
               
-              {/* 右侧：AI思考过程 - 固定宽度和高度 */}
-              <div className="w-full lg:w-2/5 order-1 lg:order-2 lg:border-l lg:pl-6 border-gray-200">
-                <div className="bg-gradient-to-br from-white to-gray-50 rounded-xl p-5 border border-gray-200 h-[400px] flex flex-col shadow-lg hover:shadow-xl transition-all duration-300">
-                  <h4 className="text-primary-600 font-medium mb-4 text-center flex items-center justify-center">
-                    <span className="inline-block h-4 w-4 rounded-full bg-primary-500 mr-2 animate-pulse-slow"></span>
+              {/* AI思考过程部分 */}
+              <div className="w-full lg:w-2/5 order-1 lg:order-2 lg:border-l lg:pl-8 border-gray-100">
+                <div className="bg-gradient-to-br from-white to-gray-50/50 rounded-2xl p-6 border border-gray-100 h-[400px] flex flex-col shadow-lg hover:shadow-xl transition-all duration-500 backdrop-blur-sm">
+                  <h4 className="text-primary-600 font-medium mb-5 text-center flex items-center justify-center">
+                    <span className="inline-block h-2 w-2 rounded-full bg-primary-500 mr-2 animate-pulse"></span>
                     AI分析引擎思考过程
                   </h4>
                   
-                  {/* 分析日志区域 - 完全独立的滚动区域，固定高度 */}
+                  {/* 分析日志区域 */}
                   <div 
                     id="log-container"
-                    className="flex-1 bg-gray-100 p-4 rounded-lg text-sm shadow-inner" 
+                    className="flex-1 bg-gray-50/50 p-5 rounded-xl text-sm shadow-inner backdrop-blur-sm" 
                     style={{ 
-                      height: '320px', // 固定高度
+                      height: '320px',
                       overflowY: 'auto',
-                      overscrollBehavior: 'contain', // 防止滚动传播
-                      scrollbarWidth: 'thin', // 细滚动条 (Firefox)
-                      scrollbarColor: '#cbd5e0 #f7fafc', // 滚动条颜色 (Firefox)
-                      position: 'relative', // 为绝对定位的子元素提供参考
-                      fontFamily: 'monospace' // 使用等宽字体，更像终端
+                      overscrollBehavior: 'contain',
+                      scrollbarWidth: 'thin',
+                      scrollbarColor: '#cbd5e0 #f7fafc',
+                      position: 'relative',
+                      fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace'
                     }}
                   >
                     {analysisLogs.length === 0 ? (
@@ -614,8 +779,8 @@ export default function ReviewForm({ data }: ReviewFormProps) {
                           <div key={index} className="flex items-start animate-fadeIn" style={{ animationDelay: `${0.05 * index}s` }}>
                             <span className="text-gray-500 mr-2 whitespace-nowrap font-medium">{log.time}</span>
                             <span className={`font-medium ${
-                              log.type === 'init' ? 'text-blue-600' : 
-                              log.type === 'loading' ? 'text-blue-700' : 
+                              log.type === 'init' ? 'text-primary-600' : 
+                              log.type === 'loading' ? 'text-primary-700' : 
                               log.type === 'parsing' ? 'text-indigo-700' : 
                               log.type === 'parsing-success' ? 'text-indigo-800 font-bold' : 
                               log.type === 'analysis' ? 'text-purple-700' : 
@@ -644,77 +809,6 @@ export default function ReviewForm({ data }: ReviewFormProps) {
                         ))}
                       </div>
                     )}
-                    
-                    {/* 自定义滚动条样式和动画 */}
-                    <style jsx>{`
-                      #log-container::-webkit-scrollbar {
-                        width: 6px;
-                      }
-                      #log-container::-webkit-scrollbar-track {
-                        background: #f1f5f9;
-                        border-radius: 3px;
-                      }
-                      #log-container::-webkit-scrollbar-thumb {
-                        background-color: #cbd5e0;
-                        border-radius: 3px;
-                      }
-                      
-                      .terminal-text {
-                        text-shadow: 0 0 1px rgba(0, 0, 0, 0.1);
-                      }
-                      
-                      @keyframes fadeIn {
-                        from { opacity: 0; transform: translateY(4px); }
-                        to { opacity: 1; transform: translateY(0); }
-                      }
-                      
-                      .animate-fadeIn {
-                        animation: fadeIn 0.4s ease-in-out forwards;
-                      }
-                      
-                      @keyframes slideInUp {
-                        from { opacity: 0; transform: translateY(20px); }
-                        to { opacity: 1; transform: translateY(0); }
-                      }
-                      
-                      .animate-slideInUp {
-                        animation: slideInUp 0.6s ease-out forwards;
-                      }
-                      
-                      .animate-pulse-slow {
-                        animation: pulse 2s infinite;
-                      }
-                      
-                      .animate-pulse-subtle {
-                        animation: pulseSlight 2s infinite;
-                      }
-                      
-                      .animate-bounce-subtle {
-                        animation: bounce 1.5s infinite;
-                      }
-                      
-                      @keyframes pulseSlight {
-                        0%, 100% { opacity: 1; }
-                        50% { opacity: 0.7; }
-                      }
-                      
-                      @keyframes pulse {
-                        0%, 100% { opacity: 1; }
-                        50% { opacity: 0.5; }
-                      }
-                      
-                      @keyframes bounce {
-                        0%, 100% { transform: translateY(0); }
-                        50% { transform: translateY(-4px); }
-                      }
-                      
-                      .glass-card {
-                        background: rgba(255, 255, 255, 0.7);
-                        backdrop-filter: blur(10px);
-                        border: 1px solid rgba(255, 255, 255, 0.3);
-                        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-                      }
-                    `}</style>
                   </div>
                 </div>
               </div>
@@ -722,14 +816,14 @@ export default function ReviewForm({ data }: ReviewFormProps) {
           </div>
           
           {/* 文本评价部分 */}
-          <div className="space-y-6 animate-slideInUp" style={{ animationDelay: '0.4s' }}>
-            <div className="flex justify-between items-center pb-2 border-b-2 border-primary-100">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-                <span className="inline-block w-2 h-6 bg-primary-500 rounded mr-2"></span>
+          <div className="space-y-8 animate-slideInUp" style={{ animationDelay: '0.4s' }}>
+            <div className="flex justify-between items-center pb-3 border-b-2 border-primary-100">
+              <h3 className="text-xl font-semibold text-gray-900 flex items-center">
+                <span className="inline-block w-1 h-6 bg-gradient-to-b from-primary-500 to-primary-600 rounded-full mr-4"></span>
                 评价意见
               </h3>
               {isLoadingData && (
-                <div className="flex items-center text-primary-500">
+                <div className="flex items-center text-primary-600">
                   <div className="animate-spin h-4 w-4 border-2 border-primary-500 border-t-transparent rounded-full mr-2"></div>
                   <span className="text-sm">加载评审数据中...</span>
                 </div>
@@ -739,13 +833,13 @@ export default function ReviewForm({ data }: ReviewFormProps) {
             {data.textualEvaluations.map((section, sectionIndex) => (
               <div 
                 key={section.id} 
-                className="space-y-3 p-5 rounded-xl hover:bg-gray-50 transition-all duration-300 border border-gray-100 shadow-sm hover:shadow-md animate-fadeIn"
+                className="space-y-4 p-6 rounded-2xl hover:bg-gray-50/50 transition-all duration-500 border border-gray-100 shadow-sm hover:shadow-lg animate-fadeIn backdrop-blur-sm"
                 style={{ animationDelay: `${0.5 + 0.1 * sectionIndex}s` }}
               >
                 <div className="flex items-center mb-3">
-                  <h4 className="font-medium text-gray-900">{section.title}</h4>
+                  <h4 className="font-medium text-gray-800">{section.title}</h4>
                   {section.required && (
-                    <Badge variant="required" className="ml-2 animate-pulse-subtle">
+                    <Badge variant="required" className="ml-2 bg-red-50 text-red-600 border border-red-100">
                       必填
                     </Badge>
                   )}
@@ -831,6 +925,51 @@ export default function ReviewForm({ data }: ReviewFormProps) {
           </div>
         </CardContent>
       </Card>
+      
+      <style jsx>{`
+        .glass-morphism {
+          background: rgba(255, 255, 255, 0.7);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.3);
+          box-shadow: 0 4px 6px rgba(0, 0, 0, 0.02);
+        }
+        
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(4px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes slideInUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-fadeIn {
+          animation: fadeIn 0.4s ease-out forwards;
+        }
+        
+        .animate-slideInUp {
+          animation: slideInUp 0.6s ease-out forwards;
+        }
+        
+        #log-container::-webkit-scrollbar {
+          width: 4px;
+        }
+        
+        #log-container::-webkit-scrollbar-track {
+          background: rgba(241, 245, 249, 0.5);
+          border-radius: 2px;
+        }
+        
+        #log-container::-webkit-scrollbar-thumb {
+          background-color: rgba(203, 213, 225, 0.5);
+          border-radius: 2px;
+        }
+        
+        #log-container::-webkit-scrollbar-thumb:hover {
+          background-color: rgba(203, 213, 225, 0.8);
+        }
+      `}</style>
     </form>
   );
 } 

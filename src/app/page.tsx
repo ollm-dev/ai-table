@@ -13,8 +13,8 @@ export default function Home() {
   return (
     <main className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6">
       <div className="max-w-5xl mx-auto">
-        <h1 className="text-3xl font-bold text-center text-gray-900 mb-2">项目评审系统</h1>
-        <p className="text-center text-gray-500 mb-10">国家自然科学基金项目通讯评审</p>
+        <h1 className="text-4xl font-bold text-center text-gray-900 mb-2">项目评审系统</h1>
+        <p className="text-center text-gray-500 mb-10">DeepInsight 项目评审🤖</p>
         <ReviewForm data={reviewFormData} />
       </div>
     </main>
