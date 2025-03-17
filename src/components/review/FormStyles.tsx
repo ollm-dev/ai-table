@@ -77,12 +77,38 @@ export function FormStyles() {
       }
       
       .stream-log {
-        margin-bottom: 0.5rem;
-        padding: 0.5rem;
+        margin-bottom: 0.75rem;
+        padding: 0.75rem;
         border-radius: 0.5rem;
-        background-color: rgba(249, 250, 251, 0.5);
-        border-left: 3px solid #8b5cf6;
-        transition: all 0.3s ease;
+        background-color: rgba(249, 250, 251, 0.8);
+        border-left: 4px solid transparent;
+        transition: all 0.2s ease;
+      }
+      
+      .stream-log.progress {
+        border-left-color: #3b82f6;
+      }
+      
+      .stream-log.reasoning {
+        border-left-color: #8b5cf6;
+      }
+      
+      .stream-log.content {
+        border-left-color: #10b981;
+      }
+      
+      .stream-log.error {
+        border-left-color: #ef4444;
+        background-color: rgba(254, 242, 242, 0.8);
+      }
+      
+      .stream-log.complete {
+        border-left-color: #059669;
+        background-color: rgba(236, 253, 245, 0.8);
+      }
+      
+      .stream-log.init {
+        border-left-color: #6366f1;
       }
       
       .stream-log:hover {

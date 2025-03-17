@@ -45,7 +45,9 @@ export default function ReviewForm({ data }: ReviewFormProps) {
     isAnalyzing,
     addAnalysisLog,
     startAnalysisWithBackend,
-    setAnalysisLogs
+    setAnalysisLogs,
+    progress,
+    statusMessage
   } = useAnalysisLogs();
   
   const {
@@ -79,8 +81,11 @@ export default function ReviewForm({ data }: ReviewFormProps) {
   };
   
   return (
-    <form className="w-full max-w-7xl mx-auto bg-gradient-to-br from-gray-50 to-white">
-      <Card className="mb-8 overflow-hidden rounded-2xl bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60">
+    <form className="w-full max-w-7xl mx-auto animate-fadeIn" style={{ animationDelay: '0.4s' }}>
+      <Card className="mb-16 overflow-hidden rounded-2xl bg-white/95 backdrop-blur-sm supports-[backdrop-filter]:bg-white/80 shadow-lg border border-gray-100">
+        {/* 装饰性边框 - 减弱效果 */}
+        <div className="h-1 w-full bg-gradient-to-r from-primary-400 via-purple-500 to-primary-400 opacity-80"></div>
+        
         <FormHeader 
           formTitle={data.formTitle} 
           pdfFile={pdfFile}
@@ -91,7 +96,7 @@ export default function ReviewForm({ data }: ReviewFormProps) {
           uploading={uploading}
           uploadError={uploadError}
         />
-        <CardContent className="p-8">
+        <CardContent className="p-8 lg:p-14">
           <ProjectInfoSection 
             projectInfo={projectInfo}
             aiRecommendationsAvailable={aiRecommendationsAvailable}
@@ -110,6 +115,8 @@ export default function ReviewForm({ data }: ReviewFormProps) {
             aiRecommendationsAvailable={aiRecommendationsAvailable}
             showEvaluationAI={showEvaluationAI}
             analysisLogs={analysisLogs}
+            progress={progress}
+            statusMessage={statusMessage}
           />
           
           <TextualEvaluationSection 

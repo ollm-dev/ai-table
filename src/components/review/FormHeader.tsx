@@ -25,12 +25,16 @@ export function FormHeader({
   uploadError
 }: FormHeaderProps) {
   return (
-    <CardHeader className="bg-gradient-to-r from-primary-50 via-primary-100 to-primary-50 border-b border-primary-100 py-8">
-      <div className="flex justify-between items-center">
+    <CardHeader className="bg-gradient-to-r from-gray-50 via-white to-gray-50 border-b border-gray-100 py-12 px-14 relative overflow-hidden">
+      {/* 装饰性背景元素 */}
+      <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-primary-100/10 to-purple-100/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3"></div>
+      <div className="absolute bottom-0 left-0 w-96 h-96 bg-gradient-to-tr from-primary-100/10 to-blue-100/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/3"></div>
+      
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-8 relative z-10">
         <div className="animate-fadeIn">
-          <CardTitle className="text-3xl font-bold text-gray-900 tracking-tight">
-            <span className="inline-block w-1 h-8 bg-gradient-to-b from-primary-500 to-primary-600 rounded-full mr-4 align-middle"></span>
-            {formTitle}
+          <CardTitle className="text-4xl font-bold text-gray-900 tracking-tight flex items-center">
+            <span className="inline-block w-2 h-10 bg-gradient-to-b from-primary-500 to-purple-600 rounded-full mr-5"></span>
+            <span className="gradient-text">{formTitle}</span>
           </CardTitle>
         </div>
         
@@ -49,22 +53,24 @@ export function FormHeader({
             <Button
               type="button"
               variant="outline"
-              className="flex items-center border-primary-200 text-primary-600 hover:bg-primary-50 transition-all duration-300 rounded-full shadow-sm hover:shadow px-6"
+              className="flex items-center border-primary-200 text-primary-600 hover:bg-primary-50 transition-all duration-300 rounded-full shadow-sm hover:shadow-md px-8 py-6 h-auto text-base group"
               onClick={() => fileInputRef.current?.click()}
             >
-              <UploadIcon className="h-4 w-4 mr-2" />
+              <UploadIcon className="h-5 w-5 mr-3 group-hover:animate-bounce-subtle" />
               上传PDF文件
             </Button>
           ) : (
-            <div className="flex items-center bg-white/80 px-5 py-2.5 rounded-full border border-primary-200 shadow-sm">
-              <FileIcon className="h-4 w-4 text-primary-500 mr-2" />
-              <span className="text-sm text-gray-700 max-w-[150px] truncate">{pdfFile.name}</span>
-              <div className="flex ml-3">
+            <div className="flex items-center bg-white/80 px-6 py-3 rounded-full border border-primary-200 shadow-sm backdrop-blur-sm">
+              <div className="bg-primary-50 p-2 rounded-full mr-3">
+                <FileIcon className="h-5 w-5 text-primary-500" />
+              </div>
+              <span className="text-base text-gray-700 max-w-[200px] truncate font-medium">{pdfFile.name}</span>
+              <div className="flex ml-4">
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="h-7 w-7 p-0 text-gray-400 hover:text-red-500 rounded-full"
+                  className="h-8 w-8 p-0 text-gray-400 hover:text-red-500 rounded-full hover:bg-red-50"
                   onClick={handleRemovePdf}
                 >
                   <XIcon className="h-4 w-4" />
@@ -73,11 +79,16 @@ export function FormHeader({
                   type="button"
                   variant="default"
                   size="sm"
-                  className="ml-2 h-7 text-xs rounded-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 transition-all duration-300 shadow-md hover:shadow-lg"
+                  className="ml-3 h-9 px-5 text-sm rounded-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 transition-all duration-300 shadow-md hover:shadow-lg"
                   onClick={handleUploadPdf}
                   disabled={uploading}
                 >
-                  {uploading ? '上传中...' : '确认上传'}
+                  {uploading ? (
+                    <span className="flex items-center">
+                      <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>
+                      上传中...
+                    </span>
+                  ) : '确认上传'}
                 </Button>
               </div>
             </div>
@@ -87,7 +98,7 @@ export function FormHeader({
       
       {/* 显示上传错误信息 */}
       {uploadError && (
-        <div className="mt-4 text-sm text-red-500 bg-red-50/50 backdrop-blur-sm p-3 rounded-xl border border-red-100 animate-fadeIn">
+        <div className="mt-6 text-sm text-red-500 bg-red-50/50 backdrop-blur-sm p-4 rounded-xl border border-red-100 animate-fadeIn">
           <span className="font-medium">错误：</span>{uploadError}
         </div>
       )}
