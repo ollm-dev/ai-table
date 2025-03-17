@@ -4,10 +4,6 @@ import "./globals.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
-// export const metadata: Metadata = {
-//   title: "项目评审系统",
-//   description: "DeepInsight 项目评审🤖",
-// };
 
 export default function RootLayout({
   children,
