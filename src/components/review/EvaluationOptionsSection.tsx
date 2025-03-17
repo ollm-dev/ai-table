@@ -51,8 +51,8 @@ export function EvaluationOptionsSection({
       </div>
       
       <div className="flex flex-col lg:flex-row gap-8">
-        <div className="flex-1 order-2 lg:order-1 lg:w-2/5 lg:max-w-[40%]">
-          <div className="space-y-6">
+        <div className="flex-1 order-2 lg:order-1 lg:w-2/5 lg:max-w-[40%] flex flex-col">
+          <div className="space-y-6 flex-1">
             {evaluationSections.map((section, sectionIndex) => (
               <EvaluationSectionItem 
                 key={section.id}
@@ -98,7 +98,7 @@ function EvaluationSectionItem({
 }: EvaluationSectionItemProps) {
   return (
     <div 
-      className="space-y-4 p-5 rounded-2xl hover:bg-gray-50/50 transition-all duration-500 border border-gray-100 shadow-sm hover:shadow-lg animate-fadeIn backdrop-blur-sm"
+      className="space-y-4 p-5 rounded-2xl hover:bg-gray-50/50 transition-all duration-500 border border-gray-200 shadow-sm hover:shadow-lg animate-fadeIn backdrop-blur-sm"
       style={{ animationDelay: `${0.1 * sectionIndex}s` }}
     >
       <div className="flex flex-col">
@@ -130,20 +130,24 @@ function EvaluationSectionItem({
         </div>
       </div>
       
-      {/* AI建议部分 */}
-      {aiRecommendationsAvailable && showEvaluationAI && section.aiRecommendation && (
-        <div className="flex items-center mt-4 p-3 bg-gray-50/50 rounded-xl border border-gray-100 animate-fadeIn backdrop-blur-sm">
-          <span className="text-gray-600 mr-3 font-medium">AI建议:</span>
-          <Badge className={`${
-            section.id === 'maturity' && section.aiRecommendation === '熟悉' ? 'bg-gradient-to-r from-green-50 to-green-100 text-green-700 border-green-200' :
-            section.id === 'rating' && section.aiRecommendation === '优' ? 'bg-gradient-to-r from-primary-50 to-primary-100 text-primary-700 border-primary-200' :
-            section.id === 'funding' && section.aiRecommendation === '优先资助' ? 'bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 border-purple-200' :
-            'bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 border-gray-200'
-          } hover:bg-opacity-80 border shadow-sm transform hover:scale-105 transition-all duration-300 px-4 py-1 rounded-full`}>
-            {section.aiRecommendation}
-          </Badge>
-        </div>
-      )}
+      {/* AI建议部分 - 始终保持相同高度 */}
+      <div className="h-[40px] flex items-center">
+        {aiRecommendationsAvailable && showEvaluationAI && section.aiRecommendation ? (
+          <div className="flex items-center p-3 bg-gray-50/50 rounded-xl border border-gray-100 animate-fadeIn backdrop-blur-sm w-full">
+            <span className="text-gray-600 mr-3 font-medium">AI建议:</span>
+            <Badge className={`${
+              section.id === 'maturity' && section.aiRecommendation === '熟悉' ? 'bg-gradient-to-r from-green-50 to-green-100 text-green-700 border-green-200' :
+              section.id === 'rating' && section.aiRecommendation === '优' ? 'bg-gradient-to-r from-primary-50 to-primary-100 text-primary-700 border-primary-200' :
+              section.id === 'funding' && section.aiRecommendation === '优先资助' ? 'bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 border-purple-200' :
+              'bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 border-gray-200'
+            } hover:bg-opacity-80 border shadow-sm transform hover:scale-105 transition-all duration-300 px-4 py-1 rounded-full`}>
+              {section.aiRecommendation}
+            </Badge>
+          </div>
+        ) : (
+          <div className="h-full w-full"></div>
+        )}
+      </div>
     </div>
   );
 }
@@ -175,14 +179,14 @@ function AnalysisLogPanel({
 
   return (
     <div className="w-full lg:w-3/5 order-1 lg:order-2 lg:border-l lg:pl-8 border-gray-100">
-      <div className="bg-gradient-to-br from-white to-gray-50/50 rounded-2xl p-6 border border-gray-100 h-[450px] flex flex-col shadow-lg hover:shadow-xl transition-all duration-500 backdrop-blur-sm relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-400 via-purple-500 to-primary-600"></div>
-        <div className="absolute -right-20 -top-20 w-40 h-40 bg-primary-100/20 rounded-full blur-3xl"></div>
-        <div className="absolute -left-20 -bottom-20 w-40 h-40 bg-purple-100/20 rounded-full blur-3xl"></div>
+      <div className="bg-gradient-to-br from-white to-gray-50/50 rounded-2xl p-6 border border-gray-200 shadow-md hover:shadow-lg transition-all duration-500 backdrop-blur-sm relative overflow-hidden h-full min-h-[450px]">
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-400 via-purple-500 to-primary-600 opacity-80"></div>
+        <div className="absolute -right-20 -top-20 w-40 h-40 bg-primary-100/10 rounded-full blur-3xl"></div>
+        <div className="absolute -left-20 -bottom-20 w-40 h-40 bg-purple-100/10 rounded-full blur-3xl"></div>
         
         <h4 className="text-primary-600 font-medium mb-3 text-center flex items-center justify-center">
           <span className="inline-block h-2 w-2 rounded-full bg-primary-500 mr-2 animate-pulse"></span>
-          <span className="gradient-text text-lg font-semibold bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-purple-600">AI分析引擎思考过程</span>
+          <span className="gradient-text text-lg font-semibold">AI分析引擎思考过程</span>
           {isAnalyzing && (
             <span className="ml-2 text-xs px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full animate-pulse">
               实时分析中...
@@ -207,9 +211,9 @@ function AnalysisLogPanel({
         <div 
           id="log-container"
           ref={logContainerRef}
-          className="flex-1 bg-gray-50/70 p-5 rounded-xl text-sm shadow-inner backdrop-blur-sm terminal-bg border border-gray-100" 
+          className="flex-1 bg-white p-5 rounded-xl text-sm shadow-inner border border-gray-200" 
           style={{ 
-            height: '370px',
+            height: '480px',
             overflowY: 'auto',
             overscrollBehavior: 'contain',
             scrollbarWidth: 'thin',
@@ -241,12 +245,12 @@ function AnalysisLogPanel({
               )}
             </div>
           ) : (
-            <div className="space-y-3 terminal-text">
+            <div className="space-y-3 terminal-text text-sm">
               {analysisLogs.map((log, index) => (
                 <div 
                   key={index} 
                   className={`stream-log ${log.type} animate-fadeIn p-2 rounded-lg ${
-                    log.type === 'reasoning' ? 'bg-primary-50/50 border-l-2 border-primary-400' : 
+                    log.type === 'reasoning' ? 'bg-gray-100 text-gray-800 border-l-2 border-primary-400' : 
                     log.type === 'content' ? 'bg-purple-50/50 border-l-2 border-purple-400' :
                     log.type === 'complete' ? 'bg-green-50/50 border-l-2 border-green-400' :
                     log.type === 'error' ? 'bg-red-50/50 border-l-2 border-red-400' : ''

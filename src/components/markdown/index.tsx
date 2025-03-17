@@ -1,11 +1,22 @@
 "use client";
 
-import "highlight.js/styles/atom-one-dark.min.css";
+import "highlight.js/styles/github.min.css";
 import "./markdown.css";
 
 import MarkdownIt from "markdown-it";
 import React, { useMemo } from "react";
 import hljs from "highlight.js";
+
+// 注册更多语言支持
+import "highlight.js/lib/languages/python";
+import "highlight.js/lib/languages/javascript";
+import "highlight.js/lib/languages/typescript";
+import "highlight.js/lib/languages/json";
+import "highlight.js/lib/languages/bash";
+import "highlight.js/lib/languages/markdown";
+import "highlight.js/lib/languages/css";
+import "highlight.js/lib/languages/xml";
+import "highlight.js/lib/languages/sql";
 
 // 预处理函数：清理和规范化 Markdown 内容
 function preprocessMarkdown(content: string): string {
@@ -57,6 +68,31 @@ function preprocessMarkdown(content: string): string {
   return processed;
 }
 
+// 添加行号到代码块
+function addLineNumbers(html: string): string {
+  const codeBlocks = html.match(/<pre class="hljs"><code>([\s\S]*?)<\/code><\/pre>/g);
+  
+  if (!codeBlocks) return html;
+  
+  let result = html;
+  
+  codeBlocks.forEach(block => {
+    const code = block.replace(/<pre class="hljs"><code>([\s\S]*?)<\/code><\/pre>/, '$1');
+    const lines = code.split('\n');
+    
+    let numberedCode = '<pre class="hljs code-with-line-numbers"><code>';
+    lines.forEach((line, index) => {
+      if (index === lines.length - 1 && line.trim() === '') return;
+      numberedCode += `<div class="code-line"><span class="line-number">${index + 1}</span>${line}</div>`;
+    });
+    numberedCode += '</code></pre>';
+    
+    result = result.replace(block, numberedCode);
+  });
+  
+  return result;
+}
+
 export default function Markdown({ content }: { content: string }) {
   // 使用 useMemo 缓存预处理结果，避免不必要的重复计算
   const processedContent = useMemo(() => preprocessMarkdown(content), [content]);
@@ -81,7 +117,9 @@ export default function Markdown({ content }: { content: string }) {
         linkify: true, // 自动将URL转换为链接
       });
       
-      return md.render(processedContent);
+      // 渲染Markdown并添加行号
+      const rendered = md.render(processedContent);
+      return addLineNumbers(rendered);
     } catch (error) {
       console.error("Markdown 渲染错误:", error);
       // 发生错误时返回简单的转义文本

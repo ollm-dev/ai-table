@@ -1,7 +1,20 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, Dispatch, SetStateAction } from 'react';
+
+export interface FormState {
+  evaluations: Record<string, string>;
+  textEvals: Record<string, string>;
+}
+
+export interface ProjectInfo {
+  projectTitle: string;
+  projectType: string;
+  researchField: string;
+  applicantName: string;
+  applicationId: string;
+}
 
 export function useReviewForm(data: any) {
-  const [formState, setFormState] = useState(() => {
+  const [formState, setFormState] = useState<FormState>(() => {
     // 初始化表单状态
     const evaluations = data.evaluationSections.reduce((acc, section) => {
       acc[section.id] = "";
@@ -30,7 +43,7 @@ export function useReviewForm(data: any) {
   const [aiRecommendationsAvailable, setAiRecommendationsAvailable] = useState(false);
   
   // 添加项目信息编辑状态
-  const [projectInfo, setProjectInfo] = useState({
+  const [projectInfo, setProjectInfo] = useState<ProjectInfo>({
     projectTitle: "",
     projectType: "",
     researchField: "",
@@ -160,12 +173,14 @@ export function useReviewForm(data: any) {
   
   return {
     formState,
+    setFormState,
     showEvaluationAI,
     setShowEvaluationAI,
     isLoadingData,
     aiRecommendationsAvailable,
     setAiRecommendationsAvailable,
     projectInfo,
+    setProjectInfo,
     editingField,
     handleRadioChange,
     handleTextChange,

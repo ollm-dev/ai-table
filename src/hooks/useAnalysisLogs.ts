@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { reviewFormData } from '../data/reviewFormData';
 
 // 模拟思考过程的文本数组
 const thinkingTexts = [
@@ -14,6 +15,38 @@ const thinkingTexts = [
   "生成评审意见..."
 ];
 
+// 初始化一个空的表单数据结构
+const emptyFormData = {
+  formTitle: "评审意见表",
+  projectInfo: {
+    projectTitle: "",
+    projectType: "",
+    researchField: "",
+    applicantName: "",
+    applicationId: ""
+  },
+  evaluationSections: [],
+  textualEvaluations: []
+};
+
+// 判断两个对象是否相等（用于防止重复更新）
+const isEqual = (obj1: any, obj2: any): boolean => {
+  if (obj1 === obj2) return true;
+  if (typeof obj1 !== 'object' || typeof obj2 !== 'object' || obj1 === null || obj2 === null) return false;
+  
+  const keys1 = Object.keys(obj1);
+  const keys2 = Object.keys(obj2);
+  
+  if (keys1.length !== keys2.length) return false;
+  
+  for (const key of keys1) {
+    if (!keys2.includes(key)) return false;
+    if (!isEqual(obj1[key], obj2[key])) return false;
+  }
+  
+  return true;
+};
+
 export function useAnalysisLogs() {
   const [analysisLogs, setAnalysisLogs] = useState<Array<{time: string, content: string, type: string}>>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -23,6 +56,26 @@ export function useAnalysisLogs() {
   const [reasoningText, setReasoningText] = useState('');
   const [finalContent, setFinalContent] = useState('');
   const [error, setError] = useState<string | null>(null);
+  
+  // 使用 useRef 缓存最新的表单数据，初始化为空的表单数据结构
+  const formDataRef = useRef({...emptyFormData});
+  
+  // 使用 useState 生成响应式的表单数据
+  const [formData, setFormData] = useState({...emptyFormData});
+  
+  // 使用 ref 记录是否已初始化结构
+  const structureInitializedRef = useRef(false);
+  
+  // 最近一次更新的时间戳，用于节流
+  const lastUpdateTimeRef = useRef(0);
+  
+  // 使用 useRef 存储更新回调
+  const dataUpdateCallbackRef = useRef<((data: any) => void) | null>(null);
+  
+  // 注册外部更新回调的方法
+  const registerUpdateCallback = useCallback((callback: (data: any) => void) => {
+    dataUpdateCallbackRef.current = callback;
+  }, []);
   
   // 添加分析日志
   const addAnalysisLog = (content: string, type: string = "normal") => {
@@ -48,28 +101,189 @@ export function useAnalysisLogs() {
     });
   };
   
-  // 模拟思考过程
-  useEffect(() => {
-    let thinkingInterval: NodeJS.Timeout | null = null;
-    let currentIndex = 0;
+  // 初始化表单结构（首次使用）
+  const initializeFormStructure = useCallback((initialData: any) => {
+    if (structureInitializedRef.current || !initialData) return;
     
-    if (isWaitingForResponse) {
-      // 立即添加第一条思考日志
-      addAnalysisLog(thinkingTexts[0], "thinking");
+    try {
+      console.log('🏗️ 初始化表单结构:', initialData);
       
-      // 每2秒更新一次思考内容
-      thinkingInterval = setInterval(() => {
-        currentIndex = (currentIndex + 1) % thinkingTexts.length;
-        updateLogContent("thinking", thinkingTexts[currentIndex], false);
-      }, 2000);
-    }
-    
-    return () => {
-      if (thinkingInterval) {
-        clearInterval(thinkingInterval);
+      // 标准化 JSON 结构，确保所有属性名使用双引号
+      const normalizedData = typeof initialData === 'string' 
+        ? JSON.parse(initialData) 
+        : initialData;
+      
+      // 更新 ref 缓存的数据
+      const updatedFormData = {
+        ...emptyFormData,
+        ...(normalizedData || {}),
+      };
+      
+      // 如果没有提供评估部分或文本评估部分，使用默认值
+      if (!updatedFormData.evaluationSections || !Array.isArray(updatedFormData.evaluationSections) || updatedFormData.evaluationSections.length === 0) {
+        updatedFormData.evaluationSections = [...reviewFormData.evaluationSections];
       }
-    };
-  }, [isWaitingForResponse]);
+      
+      if (!updatedFormData.textualEvaluations || !Array.isArray(updatedFormData.textualEvaluations) || updatedFormData.textualEvaluations.length === 0) {
+        updatedFormData.textualEvaluations = [...reviewFormData.textualEvaluations];
+      }
+      
+      formDataRef.current = updatedFormData;
+      
+      // 更新状态中的数据，触发组件重渲染
+      setFormData(prevData => {
+        // 如果新数据与旧数据相同，不进行更新（防止不必要的重渲染）
+        if (isEqual(prevData, updatedFormData)) {
+          return prevData;
+        }
+        return updatedFormData;
+      });
+      
+      // 标记为已初始化
+      structureInitializedRef.current = true;
+      
+      // 调用外部更新回调
+      if (dataUpdateCallbackRef.current) {
+        dataUpdateCallbackRef.current(updatedFormData);
+      }
+      
+      addAnalysisLog("表单结构已初始化", "structure-init");
+    } catch (error) {
+      console.error('❌ 初始化表单结构失败:', error);
+      addAnalysisLog(`初始化表单结构失败: ${error instanceof Error ? error.message : '未知错误'}`, "error");
+    }
+  }, [addAnalysisLog]);
+  
+  // 更新表单数据
+  const updateFormData = useCallback((jsonStructure: any, isPartial: boolean = false) => {
+    if (!jsonStructure) return;
+    
+    try {
+      // 节流控制：200ms 内只更新一次（防止高频更新）
+      const now = Date.now();
+      if (now - lastUpdateTimeRef.current < 200) {
+        return;
+      }
+      lastUpdateTimeRef.current = now;
+      
+      console.log('📊 接收到表单数据结构:', jsonStructure, isPartial ? '(部分更新)' : '(完整更新)');
+      
+      // 标准化 JSON 结构
+      const normalizedData = typeof jsonStructure === 'string' 
+        ? JSON.parse(jsonStructure) 
+        : jsonStructure;
+      
+      // 如果结构未初始化且非部分更新，则初始化结构
+      if (!structureInitializedRef.current && !isPartial) {
+        initializeFormStructure(normalizedData);
+        return;
+      }
+      
+      // 深拷贝当前表单数据
+      const updatedFormData = JSON.parse(JSON.stringify(formDataRef.current));
+      
+      // 更新项目信息
+      if (normalizedData.projectInfo) {
+        updatedFormData.projectInfo = {
+          ...updatedFormData.projectInfo,
+          ...normalizedData.projectInfo
+        };
+      }
+      
+      // 更新评估部分
+      if (normalizedData.evaluationSections && Array.isArray(normalizedData.evaluationSections)) {
+        normalizedData.evaluationSections.forEach((section: any) => {
+          // 确保 evaluationSections 已初始化
+          if (!updatedFormData.evaluationSections) {
+            updatedFormData.evaluationSections = [];
+          }
+          
+          if (!section.id) return; // 跳过没有 id 的部分
+          
+          const index = updatedFormData.evaluationSections.findIndex((s: any) => s.id === section.id);
+          if (index !== -1) {
+            // 已存在项，更新其属性
+            updatedFormData.evaluationSections[index] = {
+              ...updatedFormData.evaluationSections[index],
+              ...section,
+              // 确保 aiRecommendation 和 aiReason 正确更新
+              aiRecommendation: section.aiRecommendation !== undefined ? 
+                section.aiRecommendation : 
+                updatedFormData.evaluationSections[index].aiRecommendation,
+              aiReason: section.aiReason !== undefined ? 
+                section.aiReason : 
+                updatedFormData.evaluationSections[index].aiReason
+            };
+          } else if (!isPartial) {
+            // 只有在非部分更新时才添加新项目
+            updatedFormData.evaluationSections.push(section);
+          }
+        });
+      }
+      
+      // 更新文本评估部分
+      if (normalizedData.textualEvaluations && Array.isArray(normalizedData.textualEvaluations)) {
+        normalizedData.textualEvaluations.forEach((evaluation: any) => {
+          // 确保 textualEvaluations 已初始化
+          if (!updatedFormData.textualEvaluations) {
+            updatedFormData.textualEvaluations = [];
+          }
+          
+          if (!evaluation.id) return; // 跳过没有 id 的部分
+          
+          const index = updatedFormData.textualEvaluations.findIndex((e: any) => e.id === evaluation.id);
+          if (index !== -1) {
+            // 已存在项，更新其属性
+            updatedFormData.textualEvaluations[index] = {
+              ...updatedFormData.textualEvaluations[index],
+              ...evaluation,
+              // 确保 aiRecommendation 正确更新
+              aiRecommendation: evaluation.aiRecommendation !== undefined ? 
+                evaluation.aiRecommendation : 
+                updatedFormData.textualEvaluations[index].aiRecommendation
+            };
+          } else if (!isPartial) {
+            // 只有在非部分更新时才添加新项目
+            updatedFormData.textualEvaluations.push(evaluation);
+          }
+        });
+      }
+      
+      // 如果数据未发生变化，则不触发更新
+      if (isEqual(formDataRef.current, updatedFormData)) {
+        console.log('⚠️ 数据未变化，跳过更新');
+        return;
+      }
+      
+      console.log('🔄 更新后的表单数据:', updatedFormData);
+      
+      // 更新 ref 缓存的数据
+      formDataRef.current = updatedFormData;
+      
+      // 更新状态中的数据，触发组件重渲染
+      setFormData(updatedFormData);
+      
+      // 调用外部更新回调
+      if (dataUpdateCallbackRef.current) {
+        dataUpdateCallbackRef.current(updatedFormData);
+      }
+      
+      // 添加日志
+      addAnalysisLog(isPartial ? "表单数据已部分更新" : "表单数据已完全更新", "data-update");
+    } catch (error) {
+      console.error('❌ 更新表单数据失败:', error);
+      addAnalysisLog(`更新表单数据失败: ${error instanceof Error ? error.message : '未知错误'}`, "error");
+    }
+  }, [addAnalysisLog, initializeFormStructure]);
+  
+  // 重置表单数据
+  const resetFormData = useCallback(() => {
+    formDataRef.current = {...emptyFormData};
+    setFormData({...emptyFormData});
+    structureInitializedRef.current = false;
+    lastUpdateTimeRef.current = 0;
+    addAnalysisLog("表单数据已重置", "data-reset");
+  }, [addAnalysisLog]);
   
   // 开始分析
   const startAnalysisWithBackend = async (projectId: string, filePath: string) => {
@@ -83,6 +297,9 @@ export function useAnalysisLogs() {
       setReasoningText('');
       setFinalContent('');
       setError(null);
+      
+      // 重置表单数据
+      resetFormData();
       
       // 添加初始化日志
       addAnalysisLog("开始分析文档...", "init");
@@ -191,6 +408,12 @@ export function useAnalysisLogs() {
                       setReasoningText(prev => prev + data.reasoning);
                       // 使用累积的推理文本更新日志
                       updateLogContent('reasoning', reasoningText + data.reasoning, false);
+                      
+                      // 如果推理中包含部分表单结构数据，尝试提取并更新
+                      if (data.partial_structure) {
+                        console.log('🧩 推理中的部分结构:', data.partial_structure);
+                        updateFormData(data.partial_structure, true);
+                      }
                     }
                     break;
                     
@@ -201,6 +424,12 @@ export function useAnalysisLogs() {
                       setFinalContent(prev => prev + data.content);
                       // 使用累积的内容更新日志
                       updateLogContent('content', finalContent + data.content, false);
+                      
+                      // 如果内容中包含部分表单结构数据，尝试提取并更新
+                      if (data.partial_structure) {
+                        console.log('🧩 内容中的部分结构:', data.partial_structure);
+                        updateFormData(data.partial_structure, true);
+                      }
                     }
                     break;
                     
@@ -209,6 +438,13 @@ export function useAnalysisLogs() {
                     console.log('✨ 分析完成');
                     setStatusMessage(data.message || '分析完成');
                     addAnalysisLog(data.message || "分析完成: 已生成评审建议", "complete");
+                    
+                    // 处理 json_structure 字段
+                    if (data.json_structure) {
+                      console.log('🔄 接收到最终 JSON 结构:', data.json_structure);
+                      // 使用非部分更新模式，确保完整更新
+                      updateFormData(data.json_structure, false);
+                    }
                     return;
                     
                   case 'error':
@@ -218,19 +454,74 @@ export function useAnalysisLogs() {
                     addAnalysisLog(`错误: ${data.message}`, "error");
                     return;
                     
+                  case 'structure_update':
+                    // 新增类型: 结构更新
+                    if (data.structure) {
+                      console.log('🧩 接收到结构更新:', data.structure);
+                      updateFormData(data.structure, true);
+                    }
+                    break;
+                    
                   default:
                     console.warn('⚠️ 未知消息类型:', data);
-                    addAnalysisLog(`收到未知类型消息: ${JSON.stringify(data)}`, "unknown");
+                    
+                    // 尝试检测数据本身是否为 JSON 结构（非标准消息）
+                    if (data.formTitle || data.projectInfo || data.evaluationSections || data.textualEvaluations) {
+                      console.log('🔍 检测到有效表单数据结构，尝试更新');
+                      updateFormData(data, false);
+                    } else {
+                      addAnalysisLog(`收到未知类型消息: ${JSON.stringify(data)}`, "unknown");
+                    }
                 }
               } catch (e) {
                 console.error('❌ JSON解析错误:', {
                   error: e,
                   rawMessage: message
                 });
+                
+                // 尝试解析原始消息中的 JSON 结构
+                try {
+                  const startIndex = message.indexOf('{');
+                  const endIndex = message.lastIndexOf('}');
+                  if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
+                    const jsonStr = message.substring(startIndex, endIndex + 1);
+                    console.log('🔍 尝试从错误消息中提取 JSON:', jsonStr);
+                    const extractedData = JSON.parse(jsonStr);
+                    // 检查提取的数据是否有效
+                    if (extractedData.formTitle || extractedData.projectInfo || 
+                        extractedData.evaluationSections || extractedData.textualEvaluations) {
+                      console.log('🔄 提取成功，尝试更新表单数据');
+                      updateFormData(extractedData, false);
+                    }
+                  }
+                } catch (extractError) {
+                  console.error('❌ 无法从错误消息中提取 JSON:', extractError);
+                }
+                
                 addAnalysisLog(`JSON解析错误: ${e instanceof Error ? e.message : '未知错误'}`, "error");
               }
             } else {
               console.log('⚠️ 非SSE格式数据:', message);
+              
+              // 尝试从非SSE消息中提取 JSON 结构
+              try {
+                const startIndex = message.indexOf('{');
+                const endIndex = message.lastIndexOf('}');
+                if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
+                  const jsonStr = message.substring(startIndex, endIndex + 1);
+                  console.log('🔍 尝试从非SSE消息中提取 JSON:', jsonStr);
+                  const extractedData = JSON.parse(jsonStr);
+                  // 检查提取的数据是否有效
+                  if (extractedData.formTitle || extractedData.projectInfo || 
+                      extractedData.evaluationSections || extractedData.textualEvaluations) {
+                    console.log('🔄 提取成功，尝试更新表单数据');
+                    updateFormData(extractedData, false);
+                  }
+                }
+              } catch (extractError) {
+                console.error('❌ 无法从非SSE消息中提取 JSON:', extractError);
+              }
+              
               addAnalysisLog(`收到非SSE格式数据: ${message}`, "warning");
             }
           }
@@ -277,6 +568,14 @@ export function useAnalysisLogs() {
     }
   }, [finalContent]);
   
+  // 组件挂载时初始化一次表单结构
+  useEffect(() => {
+    if (!structureInitializedRef.current) {
+      // 使用默认结构初始化（此版本我们使用空结构而不是假数据）
+      initializeFormStructure(emptyFormData);
+    }
+  }, [initializeFormStructure]);
+  
   return {
     analysisLogs,
     isAnalyzing,
@@ -285,6 +584,10 @@ export function useAnalysisLogs() {
     setAnalysisLogs,
     progress,
     statusMessage,
-    error
+    error,
+    formData,
+    registerUpdateCallback,
+    updateFormData,
+    resetFormData
   };
 } 

@@ -27,7 +27,7 @@ export function ProjectInfoSection({
     <div className="mb-12">
       <h3 className="text-xl font-semibold text-gray-900 flex items-center mb-6">
         <span className="inline-block w-1 h-6 bg-gradient-to-b from-primary-500 to-primary-600 rounded-full mr-4"></span>
-        个人信息
+        项目信息
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 bg-gradient-to-br from-gray-50 to-white p-6 rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all duration-500">
         
