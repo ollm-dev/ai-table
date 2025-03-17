@@ -1,7 +1,7 @@
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
 import { UploadIcon } from "lucide-react";
-
+import Markdown from '../markdown';
 interface EvaluationSection {
   id: string;
   title: string;
@@ -220,7 +220,7 @@ function AnalysisLogPanel({ analysisLogs, isAnalyzing, pdfFile }: AnalysisLogPan
                     log.type === 'success' ? 'text-green-600 font-medium' :
                     'text-gray-700'
                   }`}>
-                    {log.content}
+                    {log.content&&<Markdown content={log.content} />}
                   </span>
                 </div>
               ))}
