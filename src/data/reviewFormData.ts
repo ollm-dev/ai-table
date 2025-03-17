@@ -2,9 +2,7 @@
  * @typedef {Object} ReviewFormData - 评审表单数据结构
  */
 export const reviewFormData = {
-  formTitle: "评审意见表",
-  // formSubtitle: "XXXX",
-  
+  formTitle: "评审意见表",  
   projectInfo: {
     projectTitle: "XXXX",
     projectType: "XXXX",

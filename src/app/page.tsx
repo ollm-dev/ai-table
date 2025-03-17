@@ -3,7 +3,7 @@
  * @module ReviewPage
  */
 import { reviewFormData } from "@/data/reviewFormData";
-import ReviewForm from "@/components/ReviewForm";
+import ReviewForm from "@/app/ReviewForm";
 
 /**
  * 项目评审页面组件
