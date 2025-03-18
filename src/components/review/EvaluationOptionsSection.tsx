@@ -79,31 +79,42 @@ export function EvaluationOptionsSection({
   onApplyJsonStructure
 }: EvaluationOptionsSectionProps) {
   return (
-    <div className="space-y-8 mb-12 animate-slideInUp" style={{ animationDelay: '0.2s' }}>
-      <div className="flex justify-between items-center pb-3 border-b-2 border-primary-100">
-        <h3 className="text-xl font-semibold text-gray-900 flex items-center">
-          <span className="inline-block w-1 h-6 bg-gradient-to-b from-primary-500 to-primary-600 rounded-full mr-4"></span>
-          评估选项
-        </h3>
-        <div className="text-sm text-primary-600 font-medium">
-          {isAnalyzing ? "实时分析进行中..." : pdfFile ? "准备开始分析..." : "上传文件后开始分析"}
-        </div>
-      </div>
-      
+    <div className="space-y-8 mb-12 animate-gentle-slide-up" style={{ animationDelay: '0.2s' }}>
       <div className="flex flex-col lg:flex-row gap-8">
-        <div className="flex-1 order-2 lg:order-1 lg:w-2/5 lg:max-w-[40%] flex flex-col">
-          <div className="space-y-6 flex-1">
-            {evaluationSections.map((section, sectionIndex) => (
-              <EvaluationSectionItem 
-                key={section.id}
-                section={section}
-                sectionIndex={sectionIndex}
-                selectedValue={formState.evaluations[section.id]}
-                handleRadioChange={handleRadioChange}
-                aiRecommendationsAvailable={aiRecommendationsAvailable}
-                showEvaluationAI={showEvaluationAI}
-              />
-            ))}
+        <div className="flex-1 order-2 lg:order-1 lg:w-2/5 lg:max-w-[40%]">
+          <div className="bg-gradient-to-br from-white to-gray-50/50 rounded-2xl p-6 border border-gray-200 shadow-md hover:shadow-lg transition-all duration-500 backdrop-blur-sm relative overflow-hidden h-full">
+            {/* 顶部渐变条 */}
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-400 via-purple-500 to-primary-600 opacity-80"></div>
+            
+            {/* 背景装饰 */}
+            <div className="absolute -right-20 -top-20 w-40 h-40 bg-primary-100/10 rounded-full blur-3xl"></div>
+            <div className="absolute -left-20 -bottom-20 w-40 h-40 bg-purple-100/10 rounded-full blur-3xl"></div>
+            
+            <div className="flex flex-col">
+              <h4 className="text-primary-600 font-medium mb-3 text-center flex items-center justify-center">
+                <span className="inline-block h-2 w-2 rounded-full bg-primary-500 mr-2 animate-pulse"></span>
+                <span className="gradient-text text-lg font-semibold">评估选项</span>
+                {isAnalyzing && (
+                  <span className="ml-2 text-xs px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full animate-pulse">
+                    实时分析中...
+                  </span>
+                )}
+              </h4>
+              
+              <div className="space-y-6 flex-1">
+                {evaluationSections.map((section, sectionIndex) => (
+                  <EvaluationSectionItem 
+                    key={section.id}
+                    section={section}
+                    sectionIndex={sectionIndex}
+                    selectedValue={formState.evaluations[section.id]}
+                    handleRadioChange={handleRadioChange}
+                    aiRecommendationsAvailable={aiRecommendationsAvailable}
+                    showEvaluationAI={showEvaluationAI}
+                  />
+                ))}
+              </div>
+            </div>
           </div>
         </div>
         
@@ -145,7 +156,7 @@ function EvaluationSectionItem({
 }: EvaluationSectionItemProps) {
   return (
     <div 
-      className="space-y-4 p-5 rounded-2xl hover:bg-gray-50/50 transition-all duration-500 border border-gray-200 shadow-sm hover:shadow-lg animate-fadeIn backdrop-blur-sm"
+      className="space-y-4 p-5 rounded-xl bg-white/80 border border-gray-200 shadow-sm backdrop-blur-sm"
       style={{ animationDelay: `${0.1 * sectionIndex}s` }}
     >
       <div className="flex flex-col">
@@ -163,13 +174,13 @@ function EvaluationSectionItem({
             <div 
               key={index} 
               onClick={() => handleRadioChange(section.id, option)}
-              className={`flex items-center justify-center px-6 py-2 rounded-xl transition-all duration-500 cursor-pointer transform hover:scale-105 ${
+              className={`flex items-center justify-center px-6 py-2 rounded-xl transition-colors duration-300 cursor-pointer ${
                 selectedValue === option 
-                  ? "bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg" 
-                  : "bg-white text-gray-700 border border-gray-200 hover:border-primary-200 hover:bg-primary-50/10"
+                  ? "bg-blue-100 text-blue-700 border border-blue-300" 
+                  : "bg-white text-gray-600 border border-gray-200 hover:border-blue-300 hover:bg-blue-50"
               }`}
             >
-              <span className="cursor-pointer font-medium text-sm">
+              <span className="font-medium text-sm">
                 {option}
               </span>
             </div>
@@ -177,17 +188,17 @@ function EvaluationSectionItem({
         </div>
       </div>
       
-      {/* AI建议部分 - 始终保持相同高度 */}
+      {/* AI建议部分 */}
       <div className="h-[40px] flex items-center">
         {aiRecommendationsAvailable && showEvaluationAI && section.aiRecommendation ? (
-          <div className="flex items-center p-3 bg-gray-50/50 rounded-xl border border-gray-100 animate-fadeIn backdrop-blur-sm w-full">
+          <div className="flex items-center p-3 bg-gray-50/80 rounded-xl border border-gray-100 w-full">
             <span className="text-gray-600 mr-3 font-medium">AI建议:</span>
             <Badge className={`${
-              section.id === 'maturity' && section.aiRecommendation === '熟悉' ? 'bg-gradient-to-r from-green-50 to-green-100 text-green-700 border-green-200' :
-              section.id === 'rating' && section.aiRecommendation === '优' ? 'bg-gradient-to-r from-primary-50 to-primary-100 text-primary-700 border-primary-200' :
-              section.id === 'funding' && section.aiRecommendation === '优先资助' ? 'bg-gradient-to-r from-purple-50 to-purple-100 text-purple-700 border-purple-200' :
-              'bg-gradient-to-r from-gray-50 to-gray-100 text-gray-700 border-gray-200'
-            } hover:bg-opacity-80 border shadow-sm transform hover:scale-105 transition-all duration-300 px-4 py-1 rounded-full`}>
+              section.id === 'maturity' && section.aiRecommendation === '熟悉' ? 'bg-green-100 text-green-700 border-green-300' :
+              section.id === 'rating' && section.aiRecommendation === '优' ? 'bg-blue-100 text-blue-700 border-blue-300' :
+              section.id === 'funding' && section.aiRecommendation === '优先资助' ? 'bg-purple-100 text-purple-700 border-purple-300' :
+              'bg-gray-100 text-gray-700 border-gray-300'
+            } border px-4 py-1 rounded-full transition-colors`}>
               {section.aiRecommendation}
             </Badge>
           </div>
@@ -215,6 +226,8 @@ function AnalysisLogPanel({
   const [activeTab, setActiveTab] = useState<'reasoning' | 'content' | 'json'>('reasoning');
   // 保存JSON结构的状态
   const [jsonStructure, setJsonStructure] = useState<string | null>(null);
+  // 添加一个新的状态来跟踪是否有新的JSON数据
+  const [hasNewJsonData, setHasNewJsonData] = useState(false);
   // 是否自动滚动到底部
   const [autoScroll, setAutoScroll] = useState(true);
   // 上次内容长度，用于检测是否有新内容
@@ -247,24 +260,44 @@ function AnalysisLogPanel({
 
   // 当有新的完成日志且包含json_structure时，提取并保存JSON结构
   useEffect(() => {
-    const completeLog = analysisLogs.find(log => 
-      log.type === 'complete' && 
-      typeof log.content === 'string' && 
-      log.content.includes('json_structure')
-    );
+    // 判断是否已经有完整的评审结果
+    const hasFullContent = analysisLogs.some(log => log.type === 'content' && log.content && log.content.length > 100);
     
-    if (completeLog) {
-      try {
-        // 尝试从日志内容中提取JSON结构
-        const match = completeLog.content.match(/json_structure":\s*({.*})/);
-        if (match && match[1]) {
-          setJsonStructure(match[1]);
+    // 只有当有完整的评审结果时，才处理 json_structure
+    if (hasFullContent) {
+      const completeLog = analysisLogs.find(log => 
+        log.type === 'complete' && 
+        typeof log.content === 'string' && 
+        log.content.includes('json_structure')
+      );
+      
+      if (completeLog) {
+        try {
+          // 尝试从日志内容中提取JSON结构
+          const match = completeLog.content.match(/json_structure":\s*({.*})/);
+          if (match && match[1]) {
+            // 延迟设置JSON数据，确保评审结果先渲染完成
+            setTimeout(() => {
+              setJsonStructure(match[1]);
+              // 设置有新数据标志
+              if (activeTab !== 'json') {
+                setHasNewJsonData(true);
+              }
+            }, 1000); // 延迟1秒，确保评审结果先渲染
+          }
+        } catch (error) {
+          console.error('解析JSON结构失败:', error);
         }
-      } catch (error) {
-        console.error('解析JSON结构失败:', error);
       }
     }
-  }, [analysisLogs]);
+  }, [analysisLogs, activeTab]);
+
+  // 当切换到JSON标签时，重置新数据标志
+  useEffect(() => {
+    if (activeTab === 'json') {
+      setHasNewJsonData(false);
+    }
+  }, [activeTab]);
 
   // 处理滚动事件 - 检测用户是否手动滚动并保存滚动位置
   useEffect(() => {
@@ -353,7 +386,7 @@ function AnalysisLogPanel({
     // 清除先前的滚动计时器
     clearTimeout(scrollTimer.current);
     
-    // 设置短延迟等待DOM渲染完成
+    // 设置更短的延迟等待DOM渲染完成
     scrollTimer.current = setTimeout(() => {
       if (!container) return;
       
@@ -362,23 +395,18 @@ function AnalysisLogPanel({
         isHandlingScrollRef.current = true;
         
         if (autoScroll) {
-          // 使用平滑滚动，提供良好的用户体验
-          container.style.scrollBehavior = 'smooth';
+          // 立即滚动到底部，不使用平滑滚动以提高速度
+          container.style.scrollBehavior = 'auto';
           container.scrollTop = container.scrollHeight;
           
-          // 滚动完成后恢复默认行为
-          setTimeout(() => {
-            if (container) {
-              container.style.scrollBehavior = 'auto';
-              isHandlingScrollRef.current = false;
-            }
-          }, 300);
+          // 恢复默认行为
+          isHandlingScrollRef.current = false;
         }
       } catch (error) {
         console.error('滚动处理错误:', error);
         isHandlingScrollRef.current = false;
       }
-    }, 50); // 减少延迟以提高响应速度
+    }, 10); // 大幅减少延迟，提高响应速度
   }, [filteredLogs, autoScroll, isAnalyzing]);
 
   // 添加CSS样式到文档头，确保markdown渲染的稳定性
@@ -399,7 +427,6 @@ function AnalysisLogPanel({
         margin-top: 0.5em !important;
         margin-bottom: 0.5em !important;
         min-height: 1.5em !important;
-        transform: translateZ(0) !important;
         contain: content !important;
       }
       
@@ -409,24 +436,17 @@ function AnalysisLogPanel({
       .markdown-content strong {
         white-space: pre-wrap !important;
         display: inline-block !important;
-        transform: translateZ(0) !important;
       }
       
       /* 确保表格不会导致布局抖动 */
       .markdown-content table {
         table-layout: fixed !important;
         width: 100% !important;
-        transform: translateZ(0) !important;
       }
 
       /* 稳定流式渲染容器 */
       .stable-display-layer {
         position: relative !important;
-        transform: translateZ(0) !important;
-        backface-visibility: hidden !important;
-        overflow: hidden !important;
-        min-height: 100% !important;
-        will-change: contents !important;
         contain: paint layout style !important;
       }
       
@@ -442,15 +462,21 @@ function AnalysisLogPanel({
         page-break-inside: avoid !important;
       }
       
-      /* 用于平滑过渡的动画 */
-      @keyframes smoothFadeIn {
-        from { opacity: 0.85; }
-        to { opacity: 1; }
-      }
-      
-      /* 应用平滑过渡效果 */
+      /* 移除过渡动画，加快渲染速度 */
       .markdown-wrapper .render-target {
-        animation: smoothFadeIn 0.3s ease-out !important;
+        animation: none !important;
+      }
+
+      /* 阻止不必要的重绘和重排，提高性能 */
+      .markdown-content * {
+        backface-visibility: hidden !important;
+        -webkit-font-smoothing: antialiased !important;
+      }
+
+      /* 优化渲染性能 */
+      .markdown-content {
+        contain: content !important;
+        content-visibility: auto !important;
       }
     `;
     
@@ -502,147 +528,300 @@ function AnalysisLogPanel({
   // 优化日志渲染
   // 使用 React.memo 包裹 MemoizedMarkdown 组件
   const MemoizedMarkdownWrapper = React.memo(({ content }: { content: string }) => {
-    // 使用稳定内容算法预处理内容
-    const stableContent = useMemo(() => getStableDisplayContent(content), [content]);
-    
+    // 不使用稳定内容算法预处理内容，直接渲染，减少处理时间
     return (
       <div className="markdown-wrapper overflow-hidden" style={{ 
         minHeight: '24px',
         position: 'relative',
         transform: 'translateZ(0)',
         backfaceVisibility: 'hidden',
-        willChange: 'contents'
+        willChange: 'contents',
+        contain: 'content' // 添加内容隔离，提高渲染性能
       }}>
-        <Markdown content={stableContent} />
+        <Markdown content={content} />
       </div>
     );
   }, (prevProps, nextProps) => {
-    // 自定义比较函数，只有内容真正变化时才重新渲染
-    // 这里对内容进行更严格的比较，避免不必要的重新渲染
-    if (!prevProps.content && !nextProps.content) return true;
-    if (!prevProps.content || !nextProps.content) return false;
-    
-    // 对于短内容，进行完全相等比较
-    if (prevProps.content.length < 100 && nextProps.content.length < 100) {
-      return prevProps.content === nextProps.content;
-    }
-    
-    // 对于长内容，如果前100个字符相同且长度差小于5%，视为相同内容
-    // 这可以防止微小变化导致整个内容重新渲染
-    const prevPrefix = prevProps.content.substring(0, 100);
-    const nextPrefix = nextProps.content.substring(0, 100);
-    if (prevPrefix === nextPrefix) {
-      const lengthDiff = Math.abs(prevProps.content.length - nextProps.content.length);
-      const lengthRatio = lengthDiff / Math.max(prevProps.content.length, nextProps.content.length);
-      return lengthRatio < 0.05; // 小于5%的变化被认为是相同的
-    }
-    
-    return false;
+    // 简化比较逻辑，仅在内容完全相同时才跳过重新渲染
+    // 这会导致更多的重新渲染，但每次渲染的速度更快
+    return prevProps.content === nextProps.content;
   });
 
   const LogRenderer = ({ filteredLogs }: { filteredLogs: Array<{ time: string; content: string; type: string }> }) => {
-    const memoizedLogs = useMemo(() => {
-      return filteredLogs.map((log) => {
-        const key = `${log.type}-${log.time}-${log.content.length}`;
-        return (
-          <div
-            key={key}
-            className={`stream-log ${log.type} p-2 rounded-lg ${
-              log.type === 'reasoning'
-                ? 'bg-gray-100 text-gray-800 border-l-2 border-primary-400'
-                : log.type === 'content'
-                ? 'bg-purple-50/50 border-l-2 border-purple-400'
-                : log.type === 'complete'
-                ? 'bg-green-50/50 border-l-2 border-green-400'
-                : log.type === 'error'
-                ? 'bg-red-50/50 border-l-2 border-red-400'
-                : ''
-            }`}
-            style={{ 
-              animation: 'none',
-              willChange: 'transform', // 优化元素变换性能
-              contain: 'content', // 包含内部布局变化
-              lineHeight: '1.5', // 固定行高
-              minHeight: '24px', // 最小高度确保一致性
-              position: 'relative',
-              transform: 'translateZ(0)',
-              backfaceVisibility: 'hidden'
-            }}
-          >
-            <div className="flex items-start">
-              <div className="mr-2 flex-shrink-0 w-5 h-5 flex items-center justify-center">
-                {log.type === 'progress' && <span>📄</span>}
-                {log.type === 'reasoning' && <span>🤔</span>}
-                {log.type === 'content' && <span>📝</span>}
-                {log.type === 'complete' && <span>✨</span>}
-                {log.type === 'error' && <span>❌</span>}
-                {log.type === 'init' && <span>🚀</span>}
-                {!['progress', 'reasoning', 'content', 'complete', 'error', 'init'].includes(
-                  log.type
-                ) && <span>📌</span>}
-              </div>
-              <div className="flex-1 min-w-0 markdown-content">
-                {log.content && (
-                  <MemoizedMarkdownWrapper content={log.content} />
-                )}
-              </div>
-            </div>
-          </div>
-        );
-      });
-    }, [filteredLogs]);
-
-    // 添加一个稳定的包装容器，避免整体高度变化导致闪动
     return (
       <div className="stable-log-container" style={{ 
         minHeight: '100%', 
         position: 'relative',
-        transform: 'translateZ(0)', // 强制硬件加速
-        willChange: 'transform',    // 优化变换性能
-        contain: 'paint layout',    // 限制重绘和重排范围
+        transform: 'translateZ(0)', 
+        willChange: 'transform',
+        contain: 'paint layout',
         backfaceVisibility: 'hidden',
-        isolation: 'isolate'        // 创建新的层叠上下文
+        isolation: 'isolate'
       }}>
-        {memoizedLogs}
+        {filteredLogs.map((log) => {
+          const key = `${log.type}-${log.time}`;
+          return (
+            <div
+              key={key}
+              className={`stream-log ${log.type} p-2 rounded-lg ${
+                log.type === 'reasoning'
+                  ? 'bg-gray-100 text-gray-800 border-l-2 border-primary-400'
+                  : log.type === 'content'
+                  ? 'bg-purple-50/50 border-l-2 border-purple-400'
+                  : log.type === 'complete'
+                  ? 'bg-green-50/50 border-l-2 border-green-400'
+                  : log.type === 'error'
+                  ? 'bg-red-50/50 border-l-2 border-red-400'
+                  : ''
+              }`}
+              style={{ 
+                animation: 'none',
+                willChange: 'transform',
+                contain: 'content',
+                lineHeight: '1.5',
+                minHeight: '24px',
+                position: 'relative',
+                transform: 'translateZ(0)',
+                backfaceVisibility: 'hidden'
+              }}
+            >
+              <div className="flex items-start">
+                <div className="mr-2 flex-shrink-0 w-5 h-5 flex items-center justify-center">
+                  {log.type === 'progress' && <span>📄</span>}
+                  {log.type === 'reasoning' && <span>🤔</span>}
+                  {log.type === 'content' && <span>📝</span>}
+                  {log.type === 'complete' && <span>✨</span>}
+                  {log.type === 'error' && <span>❌</span>}
+                  {log.type === 'init' && <span>🚀</span>}
+                  {!['progress', 'reasoning', 'content', 'complete', 'error', 'init'].includes(
+                    log.type
+                  ) && <span>📌</span>}
+                </div>
+                <div className="flex-1 min-w-0 markdown-content">
+                  {log.content && (
+                    <MemoizedMarkdownWrapper content={log.content} />
+                  )}
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     );
   };
 
-  // JSON标签页内容渲染器
+  // 更新状态定义，添加一个用于跟踪评审阶段的状态
+  const [reviewStage, setReviewStage] = useState<'waiting' | 'analyzing' | 'contentReady' | 'complete'>('waiting');
+
+  // 根据日志分析当前评审阶段
+  useEffect(() => {
+    if (!isAnalyzing && analysisLogs.length === 0) {
+      setReviewStage('waiting');
+      return;
+    }
+    
+    if (isAnalyzing) {
+      // 检查是否已有足够的内容生成
+      const hasContent = analysisLogs.some(log => log.type === 'content' && log.content && log.content.length > 50);
+      if (hasContent) {
+        setReviewStage('contentReady');
+      } else {
+        setReviewStage('analyzing');
+      }
+      return;
+    }
+    
+    // 检查是否完成
+    const isComplete = analysisLogs.some(log => log.type === 'complete');
+    if (isComplete) {
+      setReviewStage('complete');
+    } else if (analysisLogs.some(log => log.type === 'content')) {
+      setReviewStage('contentReady');
+    } else {
+      setReviewStage('analyzing');
+    }
+  }, [isAnalyzing, analysisLogs]);
+
+  // 修改JSON标签页内容渲染器
   const JsonTabContent = () => {
-    if (!jsonStructure) {
+    const [isLoadingJson, setIsLoadingJson] = useState(isAnalyzing);
+    const [jsonReady, setJsonReady] = useState(false);
+    
+    // 检查评审结果是否已经渲染完成
+    const isReviewComplete = useMemo(() => {
+      return analysisLogs.some(log => log.type === 'complete');
+    }, [analysisLogs]);
+    
+    // 检查是否有足够的内容已经生成
+    const hasEnoughContent = useMemo(() => {
+      return analysisLogs.some(log => log.type === 'content' && log.content && log.content.length > 100);
+    }, [analysisLogs]);
+    
+    // 添加effect，根据分析状态更新loading状态
+    useEffect(() => {
+      if (isAnalyzing && reviewStage !== 'contentReady' && reviewStage !== 'complete') {
+        setIsLoadingJson(true);
+        setJsonReady(false);
+      } else if (jsonStructure && (reviewStage === 'contentReady' || reviewStage === 'complete')) {
+        // 分析已有充分内容或已完成，且有JSON数据时，延迟展示内容
+        const timer = setTimeout(() => {
+          setIsLoadingJson(false);
+          setJsonReady(true);
+        }, 800);
+        return () => clearTimeout(timer);
+      } else if (!isAnalyzing && !jsonStructure) {
+        setIsLoadingJson(false);
+        setJsonReady(false);
+      }
+    }, [isAnalyzing, jsonStructure, reviewStage]);
+
+    // 获取当前阶段的进度描述
+    const getStageDescription = () => {
+      switch (reviewStage) {
+        case 'waiting':
+          return {
+            title: "等待开始分析",
+            desc: "请上传PDF文件开始分析"
+          };
+        case 'analyzing':
+          return {
+            title: "正在分析论文内容",
+            desc: "AI填充功能将在评审结果生成后可用"
+          };
+        case 'contentReady':
+          return {
+            title: "评审内容已生成",
+            desc: "正在准备AI填充数据"
+          };
+        case 'complete':
+          return {
+            title: "评审已完成",
+            desc: jsonStructure ? "AI填充数据已就绪" : "未能生成AI填充数据"
+          };
+        default:
+          return {
+            title: "状态未知",
+            desc: "请刷新页面重试"
+          };
+      }
+    };
+
+    // 显示加载进度指示
+    const renderProgressIndicator = () => {
+      const progress = reviewStage === 'waiting' ? 0 :
+                     reviewStage === 'analyzing' ? 25 :
+                     reviewStage === 'contentReady' ? 75 :
+                     reviewStage === 'complete' ? 100 : 0;
+                       
       return (
-        <div className="flex items-center justify-center h-full">
+        <div className="w-full max-w-xs mb-4">
+          <div className="relative pt-1">
+            <div className="flex items-center justify-between">
+              <div>
+                <span className="text-xs font-semibold inline-block text-primary-600">
+                  {getStageDescription().title}
+                </span>
+              </div>
+              <div className="text-right">
+                <span className="text-xs font-semibold inline-block text-primary-600">
+                  {progress}%
+                </span>
+              </div>
+            </div>
+            <div className="overflow-hidden h-2 mb-1 text-xs flex rounded bg-primary-50">
+              <div style={{ width: `${progress}%` }} 
+                className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-gradient-to-r from-primary-500 to-primary-600 transition-all duration-500"></div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // 加载中显示
+    if (isLoadingJson || reviewStage === 'analyzing' || reviewStage === 'waiting') {
+      return (
+        <div className="flex flex-col items-center justify-center h-full">
           <div className="text-center">
+            {renderProgressIndicator()}
+            
             <div className="flex justify-center mb-4">
               <div className="relative">
-                <div className="relative rounded-full h-8 w-8 bg-gray-300 flex items-center justify-center">
+                {reviewStage !== 'waiting' && (
+                  <div className="animate-ping absolute h-8 w-8 rounded-full bg-primary-200 opacity-75"></div>
+                )}
+                <div className={`relative rounded-full h-8 w-8 flex items-center justify-center ${
+                  reviewStage === 'waiting' ? 'bg-gray-300' : 'bg-primary-500'
+                }`}>
                   <span className="text-white text-lg">⋯</span>
                 </div>
               </div>
             </div>
+            
             <p className="text-gray-600">
-              暂无可用的AI自动填充数据
-              {isAnalyzing && '，正在生成中...'}
+              {getStageDescription().title}
+            </p>
+            <p className="text-xs text-gray-500 mt-2">
+              {getStageDescription().desc}
             </p>
           </div>
         </div>
       );
     }
 
+    // 没有数据显示
+    if (!jsonStructure) {
+      return (
+        <div className="flex flex-col items-center justify-center h-full">
+          <div className="text-center">
+            {renderProgressIndicator()}
+            
+            <div className="flex justify-center mb-4">
+              <div className="relative">
+                <div className="relative rounded-full h-8 w-8 bg-yellow-400 flex items-center justify-center">
+                  <span className="text-white text-lg">!</span>
+                </div>
+              </div>
+            </div>
+            
+            <p className="text-gray-600">
+              评审已完成，但无可用的AI填充数据
+            </p>
+            <p className="text-xs text-gray-500 mt-2">
+              可能是由于文档内容不足或分析过程中出错
+            </p>
+          </div>
+        </div>
+      );
+    }
+
+    // 有数据显示
     return (
-      <div className="flex flex-col h-full">
-        <div className="flex-1 overflow-auto mb-4 bg-gray-50 p-3 rounded-lg border border-gray-200">
+      <div className="flex flex-col h-full animate-gentle-fade-in">
+        <div className="mb-3">
+          {renderProgressIndicator()}
+        </div>
+        
+        <div className="flex-1 overflow-auto mb-4 bg-gray-50 p-3 rounded-lg border border-gray-200 relative">
+          {jsonReady && (
+            <div className="absolute top-2 right-2 px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full border border-green-300">
+              数据已就绪
+            </div>
+          )}
           <pre className="text-xs text-gray-700 whitespace-pre-wrap">
             {jsonStructure}
           </pre>
         </div>
+        
         <div className="flex justify-center">
           <button
             onClick={handleApplyJsonStructure}
-            className="px-6 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl 
-                      shadow-md hover:shadow-lg transition-all duration-300 flex items-center"
-            disabled={isAnalyzing}
+            className={`px-6 py-2 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center animate-gentle-slide-up ${
+              jsonReady 
+                ? 'bg-gradient-to-r from-green-500 to-green-600 text-white cursor-pointer' 
+                : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+            }`}
+            style={{ animationDelay: '0.2s' }}
+            disabled={!jsonReady}
           >
             <span className="mr-2">✓</span>
             <span className="font-medium">应用AI填充</span>
@@ -701,11 +880,18 @@ function AnalysisLogPanel({
                 activeTab === 'json' 
                   ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg border-primary-600' 
                   : 'bg-white text-gray-700 border-gray-200 hover:border-primary-200 hover:bg-primary-50/10'
-              } ${jsonStructure ? 'relative' : ''}`}
+              } ${jsonStructure && hasNewJsonData ? 'relative' : ''}`}
             >
               <span className="font-medium">AI填充</span>
-              {jsonStructure && (
-                <span className="absolute -top-1 -right-1 h-3 w-3 bg-green-500 rounded-full"></span>
+              {jsonStructure && hasNewJsonData && (
+                <span className={`absolute -top-1 -right-1 h-3 w-3 rounded-full ${
+                  hasNewJsonData ? 'animate-ping bg-green-500' : 'bg-green-500'
+                }`}></span>
+              )}
+              {jsonStructure && hasNewJsonData && (
+                <span className="absolute -top-2 -right-2 px-1.5 py-0.5 bg-green-100 text-green-700 text-xs rounded-full border border-green-300 animate-gentle-fade-in">
+                  新
+                </span>
               )}
             </button>
           </div>

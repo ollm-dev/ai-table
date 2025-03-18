@@ -4,7 +4,7 @@
 
 :root {
   --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 248, 250, 252;
+  --background-start-rgb: 252, 252, 252;
   --background-end-rgb: 255, 255, 255;
 }
 
@@ -21,12 +21,17 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(
+    to bottom,
+    rgb(var(--background-start-rgb)),
+    rgb(var(--background-end-rgb))
+  );
 }
 
 /* 自定义动画 */
-@keyframes slideInUp {
+@keyframes gentleSlideUp {
   from {
-    transform: translateY(30px);
+    transform: translateY(20px);
     opacity: 0;
   }
   to {
@@ -35,7 +40,7 @@ body {
   }
 }
 
-@keyframes fadeIn {
+@keyframes gentleFadeIn {
   from {
     opacity: 0;
   }
@@ -44,25 +49,164 @@ body {
   }
 }
 
-@keyframes bounce-subtle {
-  0%, 100% {
-    transform: translateY(0);
+.animate-gentle-slide-up {
+  animation: gentleSlideUp 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.animate-gentle-fade-in {
+  animation: gentleFadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* 优雅的卡片样式 */
+.elegant-card {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(229, 231, 235, 0.5);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.elegant-card:hover {
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+  transform: translateY(-2px);
+}
+
+/* 优雅的输入框样式 */
+.elegant-input {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid rgba(229, 231, 235, 0.8);
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  transition: all 0.2s ease;
+}
+
+.elegant-input:focus {
+  border-color: rgba(79, 70, 229, 0.4);
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+  outline: none;
+}
+
+/* 优雅的按钮样式 */
+.elegant-button {
+  background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 12px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
+}
+
+.elegant-button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(79, 70, 229, 0.2);
+}
+
+/* 优雅的标题样式 */
+.elegant-title {
+  background: linear-gradient(135deg, #1a1a1a 0%, #333333 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+/* 优雅的分割线 */
+.elegant-divider {
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    rgba(229, 231, 235, 0),
+    rgba(229, 231, 235, 0.5),
+    rgba(229, 231, 235, 0)
+  );
+  margin: 2rem 0;
+}
+
+/* 优雅的标签样式 */
+.elegant-badge {
+  background: rgba(79, 70, 229, 0.1);
+  color: #4f46e5;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+/* 优雅的滚动条 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(243, 244, 246, 0.1);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 3px;
+  transition: all 0.2s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
+}
+
+/* 优雅的阴影效果 */
+.elegant-shadow {
+  box-shadow: 
+    0 4px 20px rgba(0, 0, 0, 0.02),
+    0 1px 3px rgba(0, 0, 0, 0.01);
+}
+
+/* 优雅的背景装饰 */
+.elegant-background {
+  background-image: 
+    radial-gradient(circle at 100% 0%, rgba(79, 70, 229, 0.03) 0%, transparent 50%),
+    radial-gradient(circle at 0% 100%, rgba(99, 102, 241, 0.03) 0%, transparent 50%);
+}
+
+/* 优雅的文本区域 */
+.elegant-textarea {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid rgba(229, 231, 235, 0.8);
+  border-radius: 12px;
+  padding: 1rem;
+  min-height: 120px;
+  transition: all 0.2s ease;
+  resize: vertical;
+}
+
+.elegant-textarea:focus {
+  border-color: rgba(79, 70, 229, 0.4);
+  box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+  outline: none;
+}
+
+/* 优雅的加载状态 */
+.elegant-loading {
+  background: linear-gradient(
+    90deg,
+    rgba(243, 244, 246, 0) 0%,
+    rgba(243, 244, 246, 0.5) 50%,
+    rgba(243, 244, 246, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
   }
-  50% {
-    transform: translateY(-3px);
+  100% {
+    background-position: -200% 0;
   }
-}
-
-.animate-slideInUp {
-  animation: slideInUp 0.8s ease-out forwards;
-}
-
-.animate-fadeIn {
-  animation: fadeIn 0.7s ease-out forwards;
-}
-
-.animate-bounce-subtle {
-  animation: bounce-subtle 2s infinite;
 }
 
 /* 网格背景图案 */

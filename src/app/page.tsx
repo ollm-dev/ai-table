@@ -11,21 +11,32 @@ import ReviewForm from "@/app/ReviewForm";
  */
 export default function Home() {
   return (
-    <main className="flex-1 py-20 px-6 sm:px-8 lg:px-12">
+    <main className="flex-1 py-24 px-6 sm:px-8 lg:px-12">
       <div className="max-w-7xl mx-auto">
-        <div className="mb-20 text-center relative">
+        <div className="mb-24 text-center relative">
           {/* 装饰元素 */}
-          <div className="absolute -top-10 left-1/2 transform -translate-x-1/2 w-40 h-40 bg-gradient-to-br from-primary-100/30 to-purple-100/30 rounded-full blur-3xl -z-10"></div>
+          <div className="absolute -top-20 left-1/2 transform -translate-x-1/2 w-60 h-60">
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-50 to-purple-50 rounded-full blur-3xl opacity-70"></div>
+            <div className="absolute inset-0 bg-gradient-to-tr from-blue-50 to-indigo-50 rounded-full blur-3xl opacity-70 animate-gentle-fade-in" style={{ animationDelay: '0.3s' }}></div>
+          </div>
           
-          <h1 className="text-6xl font-bold mb-6 bg-clip-text text-transparent bg-gradient-to-r from-primary-600 to-purple-600 animate-fadeIn">
+          <h1 className="elegant-title text-6xl mb-8 animate-gentle-slide-up">
             项目评审系统
           </h1>
-          <p className="text-xl text-gray-500 max-w-2xl mx-auto animate-fadeIn" style={{ animationDelay: '0.2s' }}>
+          
+          <p className="text-xl text-gray-600 max-w-2xl mx-auto animate-gentle-fade-in tracking-wide" style={{ animationDelay: '0.2s' }}>
             DeepInsight 智能项目评审平台 · 基于AI的科研项目智能评估工具
           </p>
           
-          {/* 装饰线条 */}
-          <div className="w-24 h-1 bg-gradient-to-r from-primary-400 to-purple-400 rounded-full mx-auto mt-8 animate-fadeIn" style={{ animationDelay: '0.3s' }}></div>
+          {/* 装饰分割线 */}
+          <div className="relative mt-12 animate-gentle-fade-in" style={{ animationDelay: '0.4s' }}>
+            <div className="elegant-divider max-w-xs mx-auto"></div>
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-white rounded-full border border-gray-100 shadow-sm flex items-center justify-center">
+              <svg className="w-6 h-6 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
         </div>
         
         <ReviewForm data={reviewFormData} />
