@@ -405,9 +405,12 @@ export function useAnalysisLogs() {
                     // 更新推理文本
                     if (data.reasoning) {
                       console.log('🤔 推理内容:', data.reasoning);
-                      setReasoningText(prev => prev + data.reasoning);
-                      // 使用累积的推理文本更新日志
-                      updateLogContent('reasoning', reasoningText + data.reasoning, false);
+                      setReasoningText(prev => {
+                        const newText = prev + data.reasoning;
+                        // 使用函数更新方式确保拿到最新的文本内容
+                        updateLogContent('reasoning', newText, false);
+                        return newText;
+                      });
                       
                       // 如果推理中包含部分表单结构数据，尝试提取并更新
                       if (data.partial_structure) {
@@ -421,9 +424,12 @@ export function useAnalysisLogs() {
                     // 更新最终内容
                     if (data.content) {
                       console.log('📝 评审内容:', data.content);
-                      setFinalContent(prev => prev + data.content);
-                      // 使用累积的内容更新日志
-                      updateLogContent('content', finalContent + data.content, false);
+                      setFinalContent(prev => {
+                        const newContent = prev + data.content;
+                        // 使用函数更新方式确保拿到最新的内容
+                        updateLogContent('content', newContent, false);
+                        return newContent;
+                      });
                       
                       // 如果内容中包含部分表单结构数据，尝试提取并更新
                       if (data.partial_structure) {

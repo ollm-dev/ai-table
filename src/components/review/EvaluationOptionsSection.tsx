@@ -292,20 +292,20 @@ function AnalysisLogPanel({
       // 检查是否在底部附近（容差50px）
       const isAtBottom = Math.abs(scrollHeight - scrollTop - clientHeight) < 50;
       
-      if (!isAtBottom) {
-        if (autoScroll) {
-          setAutoScroll(false);
-        }
+      // 只有当滚动状态发生变化时才更新状态
+      if (!isAtBottom && autoScroll) {
+        setAutoScroll(false);
         userScrolledRef.current = true;
-      } else {
-        if (!autoScroll) {
-          setAutoScroll(true);
-        }
+      } else if (isAtBottom && !autoScroll) {
+        setAutoScroll(true);
         userScrolledRef.current = false;
       }
-    }, 150);
+    }, 100); // 降低防抖时间以提高响应性
 
-    container.addEventListener('scroll', handleScroll);
+    // 注册滚动事件监听器
+    container.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // 清理函数
     return () => {
       container.removeEventListener('scroll', handleScroll);
     };
@@ -315,15 +315,23 @@ function AnalysisLogPanel({
   useEffect(() => {
     setAutoScroll(true);
     userScrolledRef.current = false;
-    hasHandledScrollRef.current = false;
     
     // 在下一个渲染周期滚动到底部
-    setTimeout(() => {
+    requestAnimationFrame(() => {
       const container = logContainerRef.current;
       if (container) {
+        // 先设置为自动行为，确保立即滚动到底部
+        container.style.scrollBehavior = 'auto';
         container.scrollTop = container.scrollHeight;
+        
+        // 然后恢复平滑滚动
+        setTimeout(() => {
+          if (container) {
+            container.style.scrollBehavior = 'smooth';
+          }
+        }, 50);
       }
-    }, 100);
+    });
   }, [activeTab]);
 
   // 监听日志变化，处理滚动
@@ -339,43 +347,38 @@ function AnalysisLogPanel({
     // 更新日志长度引用
     lastContentLengthRef.current = currentLength;
     
-    // 如果没有新内容，不处理滚动
-    if (!hasNewContent) return;
+    // 如果没有新内容或用户手动滚动且不是自动滚动模式，不处理滚动
+    if (!hasNewContent || (userScrolledRef.current && !autoScroll)) return;
     
-    // 防止重复处理
-    if (hasHandledScrollRef.current) return;
-    hasHandledScrollRef.current = true;
-    
-    // 等待DOM更新后处理滚动
+    // 清除先前的滚动计时器
     clearTimeout(scrollTimer.current);
+    
+    // 设置短延迟等待DOM渲染完成
     scrollTimer.current = setTimeout(() => {
-      hasHandledScrollRef.current = false;
-      
       if (!container) return;
       
       try {
+        // 标记正在处理滚动，防止触发用户滚动事件
         isHandlingScrollRef.current = true;
         
-        // 决定是否滚动到底部
         if (autoScroll) {
-          // 使用平滑滚动，减少视觉突变
+          // 使用平滑滚动，提供良好的用户体验
           container.style.scrollBehavior = 'smooth';
           container.scrollTop = container.scrollHeight;
-          // 滚动后还原为自动滚动行为，保持后续内容平滑添加
+          
+          // 滚动完成后恢复默认行为
           setTimeout(() => {
-            container.style.scrollBehavior = 'auto';
+            if (container) {
+              container.style.scrollBehavior = 'auto';
+              isHandlingScrollRef.current = false;
+            }
           }, 300);
-        } else {
-          // 如果用户已经滚动，保持当前滚动位置
-          container.scrollTop = scrollPositionRef.current;
         }
-      } finally {
-        // 确保标志位被重置
-        setTimeout(() => {
-          isHandlingScrollRef.current = false;
-        }, 50);
+      } catch (error) {
+        console.error('滚动处理错误:', error);
+        isHandlingScrollRef.current = false;
       }
-    }, 100);
+    }, 50); // 减少延迟以提高响应速度
   }, [filteredLogs, autoScroll, isAnalyzing]);
 
   // 添加CSS样式到文档头，确保markdown渲染的稳定性
@@ -396,6 +399,8 @@ function AnalysisLogPanel({
         margin-top: 0.5em !important;
         margin-bottom: 0.5em !important;
         min-height: 1.5em !important;
+        transform: translateZ(0) !important;
+        contain: content !important;
       }
       
       /* 预防内联元素引起的抖动 */
@@ -404,12 +409,14 @@ function AnalysisLogPanel({
       .markdown-content strong {
         white-space: pre-wrap !important;
         display: inline-block !important;
+        transform: translateZ(0) !important;
       }
       
       /* 确保表格不会导致布局抖动 */
       .markdown-content table {
         table-layout: fixed !important;
         width: 100% !important;
+        transform: translateZ(0) !important;
       }
 
       /* 稳定流式渲染容器 */
@@ -419,6 +426,31 @@ function AnalysisLogPanel({
         backface-visibility: hidden !important;
         overflow: hidden !important;
         min-height: 100% !important;
+        will-change: contents !important;
+        contain: paint layout style !important;
+      }
+      
+      /* 防止滚动时的内容抖动 */
+      #log-container {
+        overscroll-behavior: contain !important;
+        scroll-padding: 8px !important;
+      }
+      
+      /* 优化流式文本渲染性能 */
+      .stream-log {
+        contain: content !important;
+        page-break-inside: avoid !important;
+      }
+      
+      /* 用于平滑过渡的动画 */
+      @keyframes smoothFadeIn {
+        from { opacity: 0.85; }
+        to { opacity: 1; }
+      }
+      
+      /* 应用平滑过渡效果 */
+      .markdown-wrapper .render-target {
+        animation: smoothFadeIn 0.3s ease-out !important;
       }
     `;
     
@@ -448,14 +480,6 @@ function AnalysisLogPanel({
     }
   }, []);
 
-  // // 添加一个记忆化的Markdown组件
-  // const MemoizedMarkdown = React.memo(({ content }: { content: string }) => {
-  //   return <Markdown content={content} />;
-  // }, (prevProps, nextProps) => {
-  //   // 严格比较文本内容，完全相同的内容不会重新渲染
-  //   return prevProps.content === nextProps.content;
-  // });
-
   // 添加一个固定字符计数算法，避免过长内容导致的布局抖动
   function getStableDisplayContent(content: string): string {
     // 如果内容为空直接返回
@@ -482,20 +506,44 @@ function AnalysisLogPanel({
     const stableContent = useMemo(() => getStableDisplayContent(content), [content]);
     
     return (
-      <div className="markdown-wrapper" style={{ minHeight: '24px' }}>
+      <div className="markdown-wrapper overflow-hidden" style={{ 
+        minHeight: '24px',
+        position: 'relative',
+        transform: 'translateZ(0)',
+        backfaceVisibility: 'hidden',
+        willChange: 'contents'
+      }}>
         <Markdown content={stableContent} />
       </div>
     );
   }, (prevProps, nextProps) => {
     // 自定义比较函数，只有内容真正变化时才重新渲染
-    // 这里使用严格相等，避免不必要的重新渲染
-    return prevProps.content === nextProps.content;
+    // 这里对内容进行更严格的比较，避免不必要的重新渲染
+    if (!prevProps.content && !nextProps.content) return true;
+    if (!prevProps.content || !nextProps.content) return false;
+    
+    // 对于短内容，进行完全相等比较
+    if (prevProps.content.length < 100 && nextProps.content.length < 100) {
+      return prevProps.content === nextProps.content;
+    }
+    
+    // 对于长内容，如果前100个字符相同且长度差小于5%，视为相同内容
+    // 这可以防止微小变化导致整个内容重新渲染
+    const prevPrefix = prevProps.content.substring(0, 100);
+    const nextPrefix = nextProps.content.substring(0, 100);
+    if (prevPrefix === nextPrefix) {
+      const lengthDiff = Math.abs(prevProps.content.length - nextProps.content.length);
+      const lengthRatio = lengthDiff / Math.max(prevProps.content.length, nextProps.content.length);
+      return lengthRatio < 0.05; // 小于5%的变化被认为是相同的
+    }
+    
+    return false;
   });
 
   const LogRenderer = ({ filteredLogs }: { filteredLogs: Array<{ time: string; content: string; type: string }> }) => {
     const memoizedLogs = useMemo(() => {
       return filteredLogs.map((log) => {
-        const key = `${log.type}-${log.time}`;
+        const key = `${log.type}-${log.time}-${log.content.length}`;
         return (
           <div
             key={key}
@@ -516,6 +564,9 @@ function AnalysisLogPanel({
               contain: 'content', // 包含内部布局变化
               lineHeight: '1.5', // 固定行高
               minHeight: '24px', // 最小高度确保一致性
+              position: 'relative',
+              transform: 'translateZ(0)',
+              backfaceVisibility: 'hidden'
             }}
           >
             <div className="flex items-start">
@@ -548,7 +599,9 @@ function AnalysisLogPanel({
         position: 'relative',
         transform: 'translateZ(0)', // 强制硬件加速
         willChange: 'transform',    // 优化变换性能
-        contain: 'paint layout'     // 限制重绘和重排范围
+        contain: 'paint layout',    // 限制重绘和重排范围
+        backfaceVisibility: 'hidden',
+        isolation: 'isolate'        // 创建新的层叠上下文
       }}>
         {memoizedLogs}
       </div>
@@ -659,7 +712,7 @@ function AnalysisLogPanel({
         </div>
         
         {/* 添加进度条 */}
-        {isAnalyzing && progress > 0 && (
+        {/* {isAnalyzing && progress > 0 && (
           <div className="mb-3">
             <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
               <div 
@@ -669,7 +722,7 @@ function AnalysisLogPanel({
             </div>
             <p className="text-xs text-gray-500 mt-1 text-center">{statusMessage}</p>
           </div>
-        )}
+        )} */}
         
         {/* 分析日志区域 */}
         <div className="relative">
