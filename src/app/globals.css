@@ -94,24 +94,6 @@ body {
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
 }
 
-/* 打字效果 */
-.typing-effect {
-  overflow: hidden;
-  border-right: 2px solid rgba(79, 70, 229, 0.5);
-  white-space: nowrap;
-  animation: typing 3s steps(40, end), blink-caret 0.75s step-end infinite;
-}
-
-@keyframes typing {
-  from { width: 0 }
-  to { width: 100% }
-}
-
-@keyframes blink-caret {
-  from, to { border-color: transparent }
-  50% { border-color: rgba(79, 70, 229, 0.5) }
-}
-
 /* 自定义滚动条 */
 ::-webkit-scrollbar {
   width: 8px;
@@ -415,4 +397,124 @@ textarea:focus, input:focus {
   height: 4px;
   background: linear-gradient(90deg, #3b82f6, #8b5cf6);
   border-radius: 6px 6px 0 0;
+}
+
+/* 添加平滑的淡入效果 */
+.stream-content {
+  opacity: 1;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.stream-log {
+  opacity: 1;
+  transform: none;
+  animation: none;
+}
+
+.stream-content {
+  opacity: 1;
+  transition: none;
+}
+
+/* 为新内容添加平滑的出现效果 */
+.markdown-content {
+  opacity: 1;
+  transition: none;
+}
+
+/* 移除所有可能导致闪烁的动画 */
+.animate-fadeIn,
+.animate-slideInUp,
+.animate-pulse,
+.animate-ping,
+.animate-bounce,
+.animate-spin {
+  animation: none !important;
+}
+
+/* 确保文本渲染稳定 */
+.markdown p,
+.markdown-content p {
+  margin: 0;
+  padding: 0;
+  transition: none;
+}
+
+/* 移除可能影响渲染的效果 */
+.backdrop-blur-sm,
+.blur-3xl,
+.blur-xl {
+  backdrop-filter: none;
+  filter: none;
+}
+
+/* 优化滚动性能 */
+#log-container {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000;
+  -webkit-font-smoothing: subpixel-antialiased;
+}
+
+/* JSON内容样式 */
+.stream-log.json pre {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.stream-log.json pre code {
+  display: block;
+  color: #1f2937;
+}
+
+/* JSON高亮样式 */
+.stream-log.json .key {
+  color: #0ea5e9;
+}
+
+.stream-log.json .string {
+  color: #059669;
+}
+
+.stream-log.json .number {
+  color: #6366f1;
+}
+
+.stream-log.json .boolean {
+  color: #7c3aed;
+}
+
+/* JSON容器滚动条样式 */
+.stream-log.json pre::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.stream-log.json pre::-webkit-scrollbar-track {
+  background: rgba(243, 244, 246, 0.5);
+}
+
+.stream-log.json pre::-webkit-scrollbar-thumb {
+  background: rgba(209, 213, 219, 0.5);
+  border-radius: 4px;
+}
+
+.stream-log.json pre::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
+}
+
+/* 修改标签按钮过渡效果 */
+.tab-button {
+  transition: all 0.2s ease-in-out;
+}
+
+/* 修改进度条样式 */
+.progress-bar {
+  transition: width 0.3s ease-in-out;
+}
+
+/* 修改内容切换动画 */
+.content-transition {
+  transition: opacity 0.2s ease-in-out;
 }
