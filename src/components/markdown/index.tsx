@@ -3,8 +3,8 @@
 import "highlight.js/styles/github.min.css";
 import "./markdown.css";
 
-import React from 'react';
-import ReactMarkdown from 'react-markdown';
+import MarkdownIt from "markdown-it";
+import React, { useMemo } from "react";
 import hljs from "highlight.js";
 
 // 注册更多语言支持
@@ -93,24 +93,54 @@ function addLineNumbers(html: string): string {
   return result;
 }
 
-interface MarkdownProps {
-  content: string;
-}
+export default function Markdown({ content }: { content: string }) {
+  // 使用 useMemo 缓存预处理结果，避免不必要的重复计算
+  const processedContent = useMemo(() => preprocessMarkdown(content), [content]);
+  
+  // 使用 useMemo 缓存 markdown-it 实例和渲染结果
+  const renderedMarkdown = useMemo(() => {
+    try {
+      const md: MarkdownIt = new MarkdownIt({
+        highlight: function (str: string, lang: string) {
+          if (lang && hljs.getLanguage(lang)) {
+            try {
+              return `<pre class="hljs"><code>${
+                hljs.highlight(str, { language: lang, ignoreIllegals: true }).value
+              }</code></pre>`;
+            } catch (_) {}
+          }
+    
+          return `<pre class="hljs"><code>${md.utils.escapeHtml(str)}</code></pre>`;
+        },
+        html: false, // 禁用HTML以提高安全性
+        breaks: true, // 允许换行符转换为 <br>
+        linkify: true, // 自动将URL转换为链接
+      });
+      
+      // 渲染Markdown并添加行号
+      const rendered = md.render(processedContent);
+      return addLineNumbers(rendered);
+    } catch (error) {
+      console.error("Markdown 渲染错误:", error);
+      // 发生错误时返回简单的转义文本
+      return `<pre>${escapeHtml(processedContent)}</pre>`;
+    }
+  }, [processedContent]);
 
-const Markdown = React.memo(({ content }: MarkdownProps) => {
+  // 简单的HTML转义函数
+  function escapeHtml(text: string): string {
+    return text
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#039;");
+  }
+
   return (
-    <div className="markdown-content">
-      <ReactMarkdown
-        components={{
-          p: ({ children }) => <p className="mb-0">{children}</p>,
-        }}
-      >
-        {content}
-      </ReactMarkdown>
-    </div>
+    <div
+      className="max-w-full overflow-x-auto markdown"
+      dangerouslySetInnerHTML={{ __html: renderedMarkdown }}
+    />
   );
-});
-
-Markdown.displayName = 'Markdown';
-
-export default Markdown;
+}

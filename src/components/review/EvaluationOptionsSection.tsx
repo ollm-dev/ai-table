@@ -216,7 +216,7 @@ function AnalysisLogPanel({
         }`}
         style={{ animation: 'none' }}
       >
-        <div className="flex items-start">
+        <div className="flex items-start"  key={`${log.type}-${log.time}`}>
           <div className="mr-2 flex-shrink-0">
             {log.type === 'progress' && <span>📄</span>}
             {log.type === 'reasoning' && <span>🤔</span>}
@@ -226,7 +226,7 @@ function AnalysisLogPanel({
             {log.type === 'init' && <span>🚀</span>}
             {!['progress', 'reasoning', 'content', 'complete', 'error', 'init'].includes(log.type) && <span>📌</span>}
           </div>
-          <div className="stream-content">
+          <div className="stream-content" key={`${log.type}-${log.time}`}>
             <div className="markdown-content">
               {log.content && <MemoizedMarkdown content={log.content} />}
             </div>
