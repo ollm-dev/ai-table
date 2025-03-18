@@ -228,6 +228,8 @@ function AnalysisLogPanel({
   const [jsonStructure, setJsonStructure] = useState<string | null>(null);
   // 是否自动滚动到底部
   const [autoScroll, setAutoScroll] = useState(true);
+  // 添加填充成功提示状态
+  const [showFillSuccess, setShowFillSuccess] = useState(false);
   // 上次内容长度，用于检测是否有新内容
   const lastContentLengthRef = useRef(0);
   // 记录用户是否手动滚动
@@ -340,7 +342,7 @@ function AnalysisLogPanel({
           if (container) {
             container.style.scrollBehavior = 'smooth';
           }
-        }, 50);
+        }, 10);
       }
     });
   }, [activeTab]);
@@ -478,6 +480,8 @@ function AnalysisLogPanel({
   const handleApplyJsonStructure = useCallback(() => {
     if (jsonStructure && onApplyJsonStructure) {
       onApplyJsonStructure(jsonStructure);
+      // 显示填充成功提示
+      setShowFillSuccess(true);
     }
   }, [jsonStructure, onApplyJsonStructure]);
 
@@ -642,22 +646,29 @@ function AnalysisLogPanel({
     }
 
     return (
-      <div className="flex flex-col h-full">
+      <div className="flex flex-col h-full relative">
         <div className="flex-1 overflow-auto mb-4 bg-gray-50 p-3 rounded-lg border border-gray-200">
           <pre className="text-xs text-gray-700 whitespace-pre-wrap">
             {jsonStructure}
           </pre>
         </div>
         <div className="flex justify-center">
-          <button
-            onClick={handleApplyJsonStructure}
-            className="px-6 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl 
+          {showFillSuccess ? (
+            <div className="px-6 py-2 bg-green-100 text-green-800 rounded-xl border border-green-200 shadow-md flex items-center">
+              <span className="mr-2">✓</span>
+              <span className="font-medium">应用成功</span>
+            </div>
+          ) : (
+            <button
+              onClick={handleApplyJsonStructure}
+              className="px-6 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-xl 
                       shadow-md hover:shadow-lg transition-all duration-300 flex items-center"
-            disabled={isAnalyzing}
-          >
-            <span className="mr-2">✓</span>
-            <span className="font-medium">应用AI填充</span>
-          </button>
+              disabled={isAnalyzing}
+            >
+              <span className="mr-2">✓</span>
+              <span className="font-medium">应用AI填充</span>
+            </button>
+          )}
         </div>
       </div>
     );

@@ -448,9 +448,12 @@ export function useAnalysisLogs() {
                     // 处理 json_structure 字段
                     if (data.json_structure) {
                       console.log('🔄 接收到最终 JSON 结构:', data.json_structure);
+                      // 将 json_structure 作为完整的日志添加，以便在 UI 中显示
+                      addAnalysisLog(JSON.stringify(data.json_structure, null, 2), "json_structure");
                       // 使用非部分更新模式，确保完整更新
                       updateFormData(data.json_structure, false);
                     }
+                    
                     return;
                     
                   case 'error':
