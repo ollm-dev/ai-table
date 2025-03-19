@@ -65,3 +65,22 @@
 5. 支持实时进度显示和状态更新
 
 这个项目的架构设计清晰，代码组织良好，特别是在处理实时数据流和用户交互方面做得很完善。
+
+## Deploy
+
+```shell
+ssh root@180.76.103.165 -p 6600
+
+tmux attach -t reviewer-web
+
+cd /root/project/ai-table
+
+git pull
+
+nvm use 18
+
+# 如果有依赖更新
+pnpm install
+
+pnpm start
+```
