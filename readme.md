@@ -82,5 +82,6 @@ nvm use 18
 # 如果有依赖更新
 pnpm install
 
+pnpm build
 pnpm start
 ```
