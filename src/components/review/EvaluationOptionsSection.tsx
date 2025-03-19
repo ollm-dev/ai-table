@@ -503,14 +503,8 @@ function AnalysisLogPanel({
     // 在这里假设大于1000字符的内容已经足够长，不会引起明显抖动
     if (content.length > 100) return content;
     
-    // 对于短内容，可以考虑填充空格，保持布局稳定
-    // 这里进行最小字符数填充，太短的内容会使容器高度不稳定
-    const minLength = 100;
-    if (content.length < minLength) {
-      // 添加隐藏的占位符，确保元素高度一致
-      return content + `<span style="opacity:0;position:absolute;pointer-events:none;">${'&nbsp;'.repeat(minLength - content.length)}</span>`;
-    }
-    
+    // 对于短内容，返回原始内容，不再添加隐藏的HTML标签
+    // 我们会在渲染组件时处理填充问题
     return content;
   }
 
@@ -520,9 +514,12 @@ function AnalysisLogPanel({
     // 使用稳定内容算法预处理内容
     const stableContent = useMemo(() => getStableDisplayContent(content), [content]);
     
+    // 计算容器最小高度，确保短内容时也有一定高度
+    const minHeight = content && content.length < 100 ? Math.max(24, content.length * 0.3) : 24;
+    
     return (
       <div className="markdown-wrapper overflow-hidden" style={{ 
-        minHeight: '24px',
+        minHeight: `${minHeight}px`,
         position: 'relative',
         transform: 'translateZ(0)',
         backfaceVisibility: 'hidden',

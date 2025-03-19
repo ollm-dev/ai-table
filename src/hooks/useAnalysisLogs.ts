@@ -77,24 +77,47 @@ export function useAnalysisLogs() {
     dataUpdateCallbackRef.current = callback;
   }, []);
   
+  // 添加HTML标签清理函数
+  const sanitizeHtml = (text: string): string => {
+    if (!text) return '';
+    
+    // 替换常见的HTML标签为Markdown等效形式或纯文本
+    return text
+      // 移除span标签 - 处理opacity:0等行内样式标签
+      .replace(/<span[^>]*>(.*?)<\/span>/g, '$1')
+      // 处理其他可能的HTML标签
+      .replace(/<\/?[^>]+(>|$)/g, '')
+      // 处理HTML实体
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&amp;/g, '&')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'");
+  };
+
   // 添加分析日志
   const addAnalysisLog = (content: string, type: string = "normal") => {
-    setAnalysisLogs(prev => [...prev, { time: new Date().toISOString(), content, type }]);
+    // 清理内容中的HTML标签
+    const sanitizedContent = sanitizeHtml(content);
+    setAnalysisLogs(prev => [...prev, { time: new Date().toISOString(), content: sanitizedContent, type }]);
   };
   
   // 更新特定类型的日志内容
   const updateLogContent = (type: string, content: string, append: boolean = false) => {
+    // 清理内容中的HTML标签
+    const sanitizedContent = sanitizeHtml(content);
     setAnalysisLogs(prev => {
       const index = prev.findIndex(log => log.type === type);
       if (index === -1) {
         // 如果不存在该类型的日志，创建新的
-        return [...prev, { time: new Date().toISOString(), content, type }];
+        return [...prev, { time: new Date().toISOString(), content: sanitizedContent, type }];
       } else {
         // 如果存在，更新或追加内容
         const newLogs = [...prev];
         newLogs[index] = {
           ...newLogs[index],
-          content: append ? newLogs[index].content + content : content
+          content: append ? sanitizeHtml(newLogs[index].content + content) : sanitizedContent
         };
         return newLogs;
       }
@@ -406,7 +429,9 @@ export function useAnalysisLogs() {
                     if (data.reasoning) {
                       console.log('🤔 推理内容:', data.reasoning);
                       setReasoningText(prev => {
-                        const newText = prev + data.reasoning;
+                        // 清理HTML标签
+                        const sanitizedReasoning = sanitizeHtml(data.reasoning);
+                        const newText = prev + sanitizedReasoning;
                         // 使用函数更新方式确保拿到最新的文本内容
                         updateLogContent('reasoning', newText, false);
                         return newText;
@@ -425,7 +450,9 @@ export function useAnalysisLogs() {
                     if (data.content) {
                       console.log('📝 评审内容:', data.content);
                       setFinalContent(prev => {
-                        const newContent = prev + data.content;
+                        // 清理HTML标签
+                        const sanitizedContent = sanitizeHtml(data.content);
+                        const newContent = prev + sanitizedContent;
                         // 使用函数更新方式确保拿到最新的内容
                         updateLogContent('content', newContent, false);
                         return newContent;
@@ -459,8 +486,8 @@ export function useAnalysisLogs() {
                   case 'error':
                     // 处理错误
                     console.error('❌ 错误消息:', data.message);
-                    setError(data.message);
-                    addAnalysisLog(`错误: ${data.message}`, "error");
+                    setError(data.message || '处理过程中发生未知错误');
+                    addAnalysisLog(data.message || '处理过程中发生未知错误', 'error');
                     return;
                     
                   case 'structure_update':
