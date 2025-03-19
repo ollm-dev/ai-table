@@ -56,7 +56,7 @@ export function useFileUpload(onAnalysisStart: (projectId: string, filePath: str
       console.log('正在上传PDF到后端API:', pdfFile.name);
       
       // 使用完整的后端URL
-      const response = await fetch('http://localhost:5555/upload', {
+      const response = await fetch('https://api-reviewer.arxivs.com/upload', {
         method: 'POST',
         body: formData,
       });

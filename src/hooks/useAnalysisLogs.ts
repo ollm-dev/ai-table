@@ -423,12 +423,12 @@ export function useAnalysisLogs() {
       };
       
       console.log('🚀 开始分析请求:', {
-        url: 'http://localhost:5555/review',
+        url: 'https://api-reviewer.arxivs.com/review',
         requestData: reviewData
       });
       
       // 发送请求
-      const response = await fetch('http://localhost:5555/review', {
+      const response = await fetch('https://api-reviewer.arxivs.com/review', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
