@@ -16,12 +16,12 @@ export interface ProjectInfo {
 export function useReviewForm(data: any) {
   const [formState, setFormState] = useState<FormState>(() => {
     // 初始化表单状态
-    const evaluations = data.evaluationSections.reduce((acc, section) => {
+    const evaluations = data.evaluationSections.reduce((acc: Record<string, string>, section: {id: string}) => {
       acc[section.id] = "";
       return acc;
     }, {} as Record<string, string>);
     
-    const textEvals = data.textualEvaluations.reduce((acc, section) => {
+    const textEvals = data.textualEvaluations.reduce((acc: Record<string, string>, section: {id: string}) => {
       acc[section.id] = "";
       return acc;
     }, {} as Record<string, string>);
@@ -72,7 +72,7 @@ export function useReviewForm(data: any) {
       
       // 模拟从后端获取的数据
       const reviewData = {
-        textEvaluations: data.textualEvaluations.reduce((acc, section) => {
+        textEvaluations: data.textualEvaluations.reduce((acc: Record<string, string>, section: {id: string}) => {
           acc[section.id] = "";
           return acc;
         }, {} as Record<string, string>)
