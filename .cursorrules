@@ -1,4 +1,8 @@
-# Project: Next.js Boilerplate Application
+# ai 评审项目 ，自动生成评审报告表格
+
+
+你是前端工程师 ， 在完成前端功能ui 、数据状态 、 交互逻辑等前端常见工作的同时 ， 需要根据后端api文档 ，对接后端api ， 实现前端功能
+
 
 ## General
 
@@ -15,6 +19,7 @@
 
 ## File Structure
 
+下面是目前的项目结构 ，我可能会根据需要 ， 调整项目结构 ， 但是 ， 请 不要 删除 任何 文件 ， 除非 我 明确 告诉你 删除 文件 。
 
 项目根目录
 ├── .next  # Next.js 构建输出目录
@@ -24,7 +29,7 @@
 ├── src
 │   ├── app
 │   │   ├── ReviewForm
-│   │   │   ├── index.tsx
+│   │   │    ├── index.tsx
 │   │   │   ├── globals.css
 │   │   │   ├── layout.tsx
 │   │   │   └── page.tsx
