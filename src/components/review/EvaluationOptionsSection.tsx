@@ -644,97 +644,97 @@ function AnalysisLogPanel({
   }, [analysisLogs, activeTab]);
 
   // 当有新的完成日志且包含json_structure时，提取并保存JSON结构
-  useEffect(() => {
-    const completeLog = analysisLogs.find(log => 
-      log.type === 'complete' && 
-      typeof log.content === 'string' && 
-      log.content.includes('json_structure')
-    );
+  // useEffect(() => {
+  //   const completeLog = analysisLogs.find(log => 
+  //     log.type === 'complete' && 
+  //     typeof log.content === 'string' && 
+  //     log.content.includes('json_structure')
+  //   );
     
-    if (completeLog) {
-      try {
-        // 优化JSON结构提取的正则表达式，使用更可靠的模式
-        // 考虑到json_structure后面可能跟着一个完整的JSON对象
-        const match = completeLog.content.match(/json_structure"?\s*:\s*({[\s\S]*?})(?=[,}]|$)/);
+  //   if (completeLog) {
+  //     try {
+  //       // 优化JSON结构提取的正则表达式，使用更可靠的模式
+  //       // 考虑到json_structure后面可能跟着一个完整的JSON对象
+  //       const match = completeLog.content.match(/json_structure"?\s*:\s*({[\s\S]*?})(?=[,}]|$)/);
         
-        if (match && match[1]) {
-          console.log('🔍 从日志中提取到JSON结构:', match[1]);
+  //       if (match && match[1]) {
+  //         console.log('🔍 从日志中提取到JSON结构:', match[1]);
           
-          try {
-            // 尝试解析提取的JSON字符串，确认它是有效的JSON
-            const parsedJson = JSON.parse(match[1]);
-            // 成功解析后再设置状态
-            setJsonStructure(match[1]);
-            console.log('✅ 成功解析JSON结构:', parsedJson);
-          } catch (parseError) {
-            console.error('❌ 提取的JSON无效，尝试进一步处理:', parseError);
+  //         try {
+  //           // 尝试解析提取的JSON字符串，确认它是有效的JSON
+  //           const parsedJson = JSON.parse(match[1]);
+  //           // 成功解析后再设置状态
+  //           setJsonStructure(match[1]);
+  //           console.log('✅ 成功解析JSON结构:', parsedJson);
+  //         } catch (parseError) {
+  //           console.error('❌ 提取的JSON无效，尝试进一步处理:', parseError);
             
-            // 尝试修复格式错误的JSON - 处理常见问题如单引号、缺少引号的属性名等
-            try {
-              // 替换单引号为双引号
-              let fixedJsonStr = match[1].replace(/'/g, '"');
-              // 处理没有引号的属性名
-              fixedJsonStr = fixedJsonStr.replace(/([{,])\s*([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
+  //           // 尝试修复格式错误的JSON - 处理常见问题如单引号、缺少引号的属性名等
+  //           try {
+  //             // 替换单引号为双引号
+  //             let fixedJsonStr = match[1].replace(/'/g, '"');
+  //             // 处理没有引号的属性名
+  //             fixedJsonStr = fixedJsonStr.replace(/([{,])\s*([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
               
-              // 再次尝试解析
-              const parsedFixedJson = JSON.parse(fixedJsonStr);
-              setJsonStructure(fixedJsonStr);
-              console.log('✅ 修复并成功解析JSON结构:', parsedFixedJson);
-            } catch (fixError) {
-              console.error('❌ 修复JSON失败:', fixError);
+  //             // 再次尝试解析
+  //             const parsedFixedJson = JSON.parse(fixedJsonStr);
+  //             setJsonStructure(fixedJsonStr);
+  //             console.log('✅ 修复并成功解析JSON结构:', parsedFixedJson);
+  //           } catch (fixError) {
+  //             console.error('❌ 修复JSON失败:', fixError);
               
-              // 最后尝试更宽松的提取 - 寻找最外层的大括号对
-              try {
-                const fullContent = completeLog.content;
-                const startIdx = fullContent.indexOf('{');
-                const endIdx = fullContent.lastIndexOf('}');
+  //             // 最后尝试更宽松的提取 - 寻找最外层的大括号对
+  //             try {
+  //               const fullContent = completeLog.content;
+  //               const startIdx = fullContent.indexOf('{');
+  //               const endIdx = fullContent.lastIndexOf('}');
                 
-                if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
-                  const potentialJson = fullContent.substring(startIdx, endIdx + 1);
-                  // 再次尝试解析
-                  const parsedPotentialJson = JSON.parse(potentialJson);
-                  setJsonStructure(potentialJson);
-                  console.log('✅ 通过宽松模式成功提取JSON结构:', parsedPotentialJson);
-                }
-              } catch (lastAttemptError) {
-                console.error('❌ 所有JSON提取方法都失败:', lastAttemptError);
-              }
-            }
-          }
-        } else {
-          console.warn('⚠️ 未找到完整的JSON结构匹配');
+  //               if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+  //                 const potentialJson = fullContent.substring(startIdx, endIdx + 1);
+  //                 // 再次尝试解析
+  //                 const parsedPotentialJson = JSON.parse(potentialJson);
+  //                 setJsonStructure(potentialJson);
+  //                 console.log('✅ 通过宽松模式成功提取JSON结构:', parsedPotentialJson);
+  //               }
+  //             } catch (lastAttemptError) {
+  //               console.error('❌ 所有JSON提取方法都失败:', lastAttemptError);
+  //             }
+  //           }
+  //         }
+  //       } else {
+  //         console.warn('⚠️ 未找到完整的JSON结构匹配');
           
-          // 尝试更宽松的提取 - 寻找最外层的大括号对
-          const fullContent = completeLog.content;
-          const startIdx = fullContent.indexOf('{');
-          const endIdx = fullContent.lastIndexOf('}');
+  //         // 尝试更宽松的提取 - 寻找最外层的大括号对
+  //         const fullContent = completeLog.content;
+  //         const startIdx = fullContent.indexOf('{');
+  //         const endIdx = fullContent.lastIndexOf('}');
           
-          if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
-            try {
-              const potentialJson = fullContent.substring(startIdx, endIdx + 1);
-              // 尝试解析
-              const parsedJson = JSON.parse(potentialJson);
+  //         if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+  //           try {
+  //             const potentialJson = fullContent.substring(startIdx, endIdx + 1);
+  //             // 尝试解析
+  //             const parsedJson = JSON.parse(potentialJson);
               
-              // 验证提取的JSON是否包含必要的表单结构字段
-              if (
-                parsedJson.formTitle || 
-                parsedJson.projectInfo || 
-                parsedJson.evaluationSections || 
-                parsedJson.textualEvaluations
-              ) {
-                setJsonStructure(potentialJson);
-                console.log('✅ 通过宽松模式提取到有效的表单JSON:', parsedJson);
-              }
-            } catch (parseError) {
-              console.error('❌ 宽松模式JSON解析失败:', parseError);
-            }
-          }
-        }
-      } catch (error) {
-        console.error('❌ 解析JSON结构失败:', error);
-      }
-    }
-  }, [analysisLogs]);
+  //             // 验证提取的JSON是否包含必要的表单结构字段
+  //             if (
+  //               parsedJson.formTitle || 
+  //               parsedJson.projectInfo || 
+  //               parsedJson.evaluationSections || 
+  //               parsedJson.textualEvaluations
+  //             ) {
+  //               setJsonStructure(potentialJson);
+  //               console.log('✅ 通过宽松模式提取到有效的表单JSON:', parsedJson);
+  //             }
+  //           } catch (parseError) {
+  //             console.error('❌ 宽松模式JSON解析失败:', parseError);
+  //           }
+  //         }
+  //       }
+  //     } catch (error) {
+  //       console.error('❌ 解析JSON结构失败:', error);
+  //     }
+  //   }
+  // }, [analysisLogs]);
 
   // 添加CSS样式到文档头，确保markdown渲染的稳定性
   useEffect(() => {

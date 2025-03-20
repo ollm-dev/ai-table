@@ -66,6 +66,26 @@
 
 这个项目的架构设计清晰，代码组织良好，特别是在处理实时数据流和用户交互方面做得很完善。
 
+### 7. 环境配置
+
+项目支持本地开发和生产环境两种模式的 API 配置：
+
+```typescript
+// API 环境配置
+1. 默认情况下：
+   - 开发环境使用 http://localhost:5555 作为 API 基础地址
+   - 生产环境使用 https://api-reviewer.arxivs.com 作为 API 基础地址
+
+2. 自定义 API 地址：
+   - 创建 .env.local 文件（基于 .env.example）
+   - 设置 NEXT_PUBLIC_API_BASE_URL 环境变量
+```
+
+配置步骤：
+1. 复制 `.env.example` 为 `.env.local`
+2. 根据需要修改 `.env.local` 中的配置
+3. 重启开发服务器应用配置
+
 ## Deploy
 
 ```shell

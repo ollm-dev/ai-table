@@ -1,4 +1,6 @@
 import { useState, useRef } from 'react';
+// 导入API URL配置
+import { getUploadUrl } from '../lib/config';
 
 export function useFileUpload(onAnalysisStart: (projectId: string, filePath: string) => Promise<void>, addAnalysisLog: (content: string, type?: string) => void) {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
@@ -55,8 +57,9 @@ export function useFileUpload(onAnalysisStart: (projectId: string, filePath: str
       // 直接与后端API对接 - 上传文件
       console.log('正在上传PDF到后端API:', pdfFile.name);
       
-      // 使用完整的后端URL
-      const response = await fetch('https://api-reviewer.arxivs.com/upload', {
+      // 使用配置中的API URL
+      const uploadUrl = getUploadUrl();
+      const response = await fetch(uploadUrl, {
         method: 'POST',
         body: formData,
       });

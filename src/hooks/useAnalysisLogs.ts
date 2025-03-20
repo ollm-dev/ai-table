@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { reviewFormData } from '../data/reviewFormData';
+// 导入API URL配置
+import { getReviewUrl } from '../lib/config';
 
 // 模拟思考过程的文本数组
 const thinkingTexts = [
@@ -422,13 +424,15 @@ export function useAnalysisLogs() {
         use_claude: false
       };
       
+      // 使用配置中的API URL
+      const reviewUrl = getReviewUrl();
       console.log('🚀 开始分析请求:', {
-        url: 'https://api-reviewer.arxivs.com/review',
+        url: reviewUrl,
         requestData: reviewData
       });
       
       // 发送请求
-      const response = await fetch('https://api-reviewer.arxivs.com/review', {
+      const response = await fetch(reviewUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
