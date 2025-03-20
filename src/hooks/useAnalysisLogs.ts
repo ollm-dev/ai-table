@@ -3,19 +3,122 @@ import { reviewFormData } from '../data/reviewFormData';
 // 导入API URL配置
 import { getReviewUrl } from '../lib/config';
 
-// 模拟思考过程的文本数组
-const thinkingTexts = [
-  "正在加载论文内容...",
-  "分析论文结构...",
-  "提取研究方法...",
-  "评估研究创新点...",
-  "检查实验设计...",
-  "分析数据处理方法...",
-  "评估结论有效性...",
-  "检查参考文献质量...",
-  "综合评估研究价值...",
-  "生成评审意见..."
-];
+const transformApiJsonToFormData = (apiJson: any): any => {
+  try {
+    console.log('🔄 转换API JSON为表单数据:', apiJson);
+    
+    // 如果结构已经符合表单格式，直接返回
+    if (apiJson.formTitle || apiJson.projectInfo || 
+        apiJson.evaluationSections || apiJson.textualEvaluations) {
+      return apiJson;
+    }
+    
+    // 初始化结果对象
+    const formData = {
+      formTitle: "评审意见表",
+      projectInfo: reviewFormData.projectInfo,
+      evaluationSections: [...reviewFormData.evaluationSections],
+      textualEvaluations: [...reviewFormData.textualEvaluations]
+    };
+    
+    // 处理标题
+    if (apiJson.title) {
+      formData.projectInfo.projectTitle = apiJson.title;
+    }
+    
+    // 处理作者
+    if (apiJson.authors && Array.isArray(apiJson.authors) && apiJson.authors.length > 0) {
+      formData.projectInfo.applicantName = apiJson.authors.join(', ');
+    }
+    
+    // 处理摘要 - 可以添加到某个文本评估字段中
+    if (apiJson.abstract) {
+      const abstractEvalIndex = formData.textualEvaluations.findIndex(item => item.id === 'abstract' || item.title.includes('摘要'));
+      if (abstractEvalIndex !== -1) {
+        formData.textualEvaluations[abstractEvalIndex].aiRecommendation = apiJson.abstract;
+      } else if (formData.textualEvaluations.length > 0) {
+        // 如果找不到专门的摘要字段，使用第一个文本评估字段
+        formData.textualEvaluations[0].aiRecommendation = 
+          `**摘要**: ${apiJson.abstract}\n\n${formData.textualEvaluations[0].aiRecommendation || ''}`;
+      }
+    }
+    
+    // 处理关键词
+    if (apiJson.keywords && Array.isArray(apiJson.keywords)) {
+      const keywordsStr = apiJson.keywords.join(', ');
+      formData.projectInfo.researchField = keywordsStr;
+    }
+    
+    // 处理评估分数
+    if (apiJson.evaluation) {
+      const { evaluation } = apiJson;
+      
+      // 映射评估字段到评估部分
+      const scoreMapping: Record<string, string> = {
+        originality: 'originality', // 原创性
+        significance: 'significance', // 重要性
+        validity: 'validity', // 有效性
+        organization: 'organization', // 组织结构
+        clarity: 'clarity', // 清晰度
+        recommendation: 'recommendation' // 推荐意见
+      };
+      
+      // 更新评估部分
+      Object.entries(scoreMapping).forEach(([apiKey, formKey]) => {
+        if (evaluation[apiKey] !== undefined) {
+          const sectionIndex = formData.evaluationSections.findIndex(section => 
+            section.id === formKey || section.title.toLowerCase().includes(formKey.toLowerCase())
+          );
+          
+          if (sectionIndex !== -1) {
+            // 数值评分
+            if (typeof evaluation[apiKey] === 'number') {
+              formData.evaluationSections[sectionIndex].aiRecommendation = evaluation[apiKey].toString();
+            } 
+            // 文本推荐
+            else if (typeof evaluation[apiKey] === 'string') {
+              formData.evaluationSections[sectionIndex].aiRecommendation = evaluation[apiKey];
+            }
+          }
+        }
+      });
+      
+      // 处理整体评估
+      if (evaluation.recommendation) {
+        const overallEvalIndex = formData.textualEvaluations.findIndex(item => 
+          item.id === 'overall' || item.title.includes('总体') || item.title.includes('整体')
+        );
+        
+        if (overallEvalIndex !== -1) {
+          formData.textualEvaluations[overallEvalIndex].aiRecommendation = 
+            `**总体评价**: ${evaluation.recommendation}\n\n${formData.textualEvaluations[overallEvalIndex].aiRecommendation || ''}`;
+        }
+      }
+    }
+    
+    // 如果API返回了详细评论，可以添加到相应的文本评估部分
+    if (apiJson.comments && typeof apiJson.comments === 'string' && apiJson.comments.trim()) {
+      const commentsEvalIndex = formData.textualEvaluations.findIndex(item => 
+        item.id === 'comments' || item.title.includes('评论') || item.title.includes('意见')
+      );
+      
+      if (commentsEvalIndex !== -1) {
+        formData.textualEvaluations[commentsEvalIndex].aiRecommendation = apiJson.comments;
+      } else if (formData.textualEvaluations.length > 1) {
+        // 如果找不到专门的评论字段，使用第二个文本评估字段
+        formData.textualEvaluations[1].aiRecommendation = 
+          `**详细评论**: ${apiJson.comments}\n\n${formData.textualEvaluations[1].aiRecommendation || ''}`;
+      }
+    }
+    
+    console.log('✅ 转换后的表单数据:', formData);
+    return formData;
+  } catch (error) {
+    console.error('❌ 转换API JSON时出错:', error);
+    // 出错时返回原始数据
+    return apiJson;
+  }
+};
 
 // 初始化一个空的表单数据结构
 const emptyFormData = {
@@ -54,6 +157,7 @@ export function useAnalysisLogs() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isWaitingForResponse, setIsWaitingForResponse] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [jsonStructure, setJsonStructure] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState('');
   const [reasoningText, setReasoningText] = useState('');
   const [finalContent, setFinalContent] = useState('');
@@ -399,7 +503,7 @@ export function useAnalysisLogs() {
   }, [addAnalysisLog]);
   
   // 开始分析
-  const startAnalysisWithBackend = async (projectId: string, filePath: string) => {
+  const startAnalysisWithBackend = async ( filePath: string) => {
     try {
       // 重置所有状态
       setIsAnalyzing(true);
@@ -408,6 +512,7 @@ export function useAnalysisLogs() {
       setProgress(0);
       setStatusMessage('准备开始分析...');
       setReasoningText('');
+      setJsonStructure('');
       setFinalContent('');
       setError(null);
       
@@ -558,96 +663,158 @@ export function useAnalysisLogs() {
                     }
                     break;
                     
+                  case 'json_structure':
+                    // 处理 json_structure 类型消息
+                      // 更新推理文本
+                      if (data.json_structure) {
+                        console.log('🤔 推理内容:', data.json_structure);
+                        setReasoningText(prev => {
+                          // 清理HTML标签
+                          const sanitizedReasoning = sanitizeHtml(data.json_structure);
+                          const newText = prev + sanitizedReasoning;
+                          // 使用函数更新方式确保拿到最新的文本内容
+                          updateLogContent('json_structure', newText, false);
+                          return newText;
+                        });
+                        
+                        // 如果推理中包含部分表单结构数据，尝试提取并更新
+                        if (data.partial_structure) {
+                          console.log('🧩 推理中的部分结构:', data.partial_structure);
+                          updateFormData(data.partial_structure, true);
+                        }
+                      }
+                    break;
+                    
+                  case 'json_complete':
+                    // 处理 json_complete 类型消息 - 这里非常重要，因为它包含完整的论文评估结果JSON
+                    if (data.json_complete) {
+                      console.log('✅ 接收到完整JSON结构:', data.json_complete);
+                      addAnalysisLog(`接收到完整JSON结构`, "json_complete");
+                      
+                      try {
+                        // 尝试解析和更新完整数据
+                        let completeStructure = data.json_complete;
+                        console.log('🔍 完整JSON结构:', completeStructure);
+                        if (typeof completeStructure === 'string') {
+                          try {
+                            completeStructure = JSON.parse(completeStructure);
+                          } catch (parseError) {
+                            console.error('❌ JSON完整结构解析失败:', parseError);
+                            
+                            // 尝试修复可能的JSON格式问题
+                            try {
+                              // 替换单引号为双引号
+                              let fixedJsonStr = completeStructure.replace(/'/g, '"');
+                              // 处理没有引号的属性名
+                              fixedJsonStr = fixedJsonStr.replace(/([{,])\s*([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
+                              
+                              completeStructure = JSON.parse(fixedJsonStr);
+                              console.log('✅ 修复后解析成功:', completeStructure);
+                            } catch (fixError) {
+                              console.error('❌ 无法修复和解析JSON完整结构:', fixError);
+                              // 添加错误日志
+                              addAnalysisLog(`无法解析JSON完整结构: ${fixError instanceof Error ? fixError.message : '未知错误'}`, "error");
+                              break; // 无法解析，退出处理
+                            }
+                          }
+                        }
+                        
+                        // 验证数据结构是否有效
+                        if (completeStructure && typeof completeStructure === 'object') {
+                          console.log('✅ 有效的完整表单数据结构，更新表单');
+                          
+                          // 转换API返回的评估数据结构为前端表单数据结构
+                          const transformedData = transformApiJsonToFormData(completeStructure);
+                          
+                          // 使用非部分更新模式，确保完整更新
+                          updateFormData(transformedData, false);
+                          
+                          // 添加成功处理的日志
+                          addAnalysisLog(`成功更新表单数据结构`, "success");
+                        } else {
+                          console.warn('⚠️ 完整JSON结构格式不符合预期:', completeStructure);
+                          addAnalysisLog(`JSON结构格式不符合预期`, "warning");
+                        }
+                      } catch (completeStructureError) {
+                        console.error('❌ 处理完整JSON结构时出错:', completeStructureError);
+                        addAnalysisLog(`处理完整JSON结构时出错: ${completeStructureError instanceof Error ? completeStructureError.message : '未知错误'}`, "error");
+                      }
+                    }
+                    break;
+                    
                   case 'complete':
-                    // 处理完成
+                    // 处理完成事件 - 确保数据也同步处理完成
                     console.log('✨ 分析完成');
                     setStatusMessage(data.message || '分析完成');
                     
                     // 自定义完成消息，包含json_structure信息
                     let completeMessage = data.message || "分析完成: 已生成评审建议";
                     
-                    // 处理 json_structure 字段
+                    // 处理 json_structure 字段 (如果complete消息中包含json_structure)
                     if (data.json_structure) {
-                      console.log('🔄 接收到最终 JSON 结构:', data.json_structure);
+                      console.log('🔄 complete消息中包含JSON结构:', data.json_structure);
                       
                       // 添加json_structure信息到完成消息，用于在日志中查看
                       try {
-                        // 创建一个可用于显示的JSON字符串（简化但可读）
+                        // 创建一个可读的JSON格式
                         let jsonDisplay = '';
                         
                         if (typeof data.json_structure === 'string') {
-                          // 如果已经是字符串，保持不变
-                          jsonDisplay = data.json_structure;
+                          // 尝试解析并格式化
+                          try {
+                            const parsedJson = JSON.parse(data.json_structure);
+                            jsonDisplay = JSON.stringify(parsedJson, null, 2);
+                          } catch (parseError) {
+                            // 如果无法解析，使用原始字符串
+                            jsonDisplay = data.json_structure;
+                          }
                         } else {
-                          // 如果是对象，转换为格式化的JSON字符串
+                          // 如果是对象，格式化为JSON字符串
                           jsonDisplay = JSON.stringify(data.json_structure, null, 2);
                         }
                         
-                        // 附加json_structure到完成消息
-                        completeMessage += `\n\n${"json_structure"}: ${jsonDisplay}`;
+                        // 附加JSON信息到完成消息
+                        completeMessage += `\n\n已接收论文评审数据，可查看评审建议`;
                       } catch (jsonStringifyError) {
-                        console.error('❌ 序列化JSON结构时出错:', jsonStringifyError);
-                        completeMessage += `\n\n${"json_structure"}: [序列化失败，请查看控制台日志]`;
+                        console.error('❌ 处理JSON结构时出错:', jsonStringifyError);
+                        completeMessage += `\n\n数据接收完成，但处理过程中有错误`;
                       }
                       
-                      // 记录带有json_structure的完成日志
-                      addAnalysisLog(completeMessage, "complete");
-                      
-                      // 根据json_structure的类型进行不同处理
+                      // 尝试将complete消息中的JSON结构也用于更新表单
                       try {
-                        // 如果是字符串，先尝试解析
                         let structureData = data.json_structure;
                         
                         if (typeof structureData === 'string') {
-                          console.log('📝 JSON结构为字符串，尝试解析');
                           try {
                             structureData = JSON.parse(structureData);
                           } catch (parseError) {
                             console.error('❌ JSON字符串解析失败:', parseError);
                             
-                            // 尝试修复可能的JSON格式问题
+                            // 尝试修复JSON格式问题
                             try {
-                              // 替换单引号为双引号
                               let fixedJsonStr = structureData.replace(/'/g, '"');
-                              // 处理没有引号的属性名
                               fixedJsonStr = fixedJsonStr.replace(/([{,])\s*([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
                               
                               structureData = JSON.parse(fixedJsonStr);
                               console.log('✅ 修复后解析成功:', structureData);
                             } catch (fixError) {
-                              console.error('❌ 无法修复和解析JSON字符串:', fixError);
-                              // 保持原始字符串格式
+                              console.error('❌ 无法修复JSON格式:', fixError);
                             }
                           }
                         }
                         
-                        // 验证数据结构是否符合预期
-                        const isValidStructure = typeof structureData === 'object' && 
-                          (structureData.formTitle || 
-                           structureData.projectInfo || 
-                           structureData.evaluationSections || 
-                           structureData.textualEvaluations);
-                        
-                        if (isValidStructure) {
-                          console.log('✅ 有效的表单数据结构，更新表单');
-                          // 使用非部分更新模式，确保完整更新
-                          updateFormData(structureData, false);
-                        } else {
-                          console.warn('⚠️ 结构格式不符合预期:', structureData);
-                          // 尝试以部分数据更新的方式处理
-                          updateFormData(structureData, true);
+                        // 仅当是有效的对象时才更新
+                        if (structureData && typeof structureData === 'object') {
+                          const transformedData = transformApiJsonToFormData(structureData);
+                          updateFormData(transformedData, false);
                         }
-                      } catch (structureError) {
-                        console.error('❌ 处理JSON结构时出错:', structureError);
-                        // 记录错误但不中断流程
-                        addAnalysisLog(`处理JSON结构时出错: ${structureError instanceof Error ? structureError.message : '未知错误'}`, "error");
+                      } catch (updateError) {
+                        console.error('❌ 更新表单失败:', updateError);
                       }
-                    } else {
-                      console.warn('⚠️ complete消息中没有json_structure字段');
-                      // 没有json_structure时也记录完成日志
-                      addAnalysisLog(completeMessage, "complete");
                     }
                     
+                    // 记录完成日志
+                    addAnalysisLog(completeMessage, "complete");
                     return;
                     
                   case 'error':
@@ -656,15 +823,7 @@ export function useAnalysisLogs() {
                     setError(data.message || '处理过程中发生未知错误');
                     addAnalysisLog(data.message || '处理过程中发生未知错误', 'error');
                     return;
-                    
-                  case 'structure_update':
-                    // 新增类型: 结构更新
-                    if (data.structure) {
-                      console.log('🧩 接收到结构更新:', data.structure);
-                      updateFormData(data.structure, true);
-                    }
-                    break;
-                    
+
                   default:
                     console.warn('⚠️ 未知消息类型:', data);
                     
@@ -770,6 +929,14 @@ export function useAnalysisLogs() {
       updateLogContent('content', finalContent, false);
     }
   }, [finalContent]);
+
+  useEffect(() => {
+    if (jsonStructure) {
+      updateLogContent('json_structure', jsonStructure, false);
+    }
+  }, [jsonStructure]);
+
+
   
   // 组件挂载时初始化一次表单结构
   useEffect(() => {

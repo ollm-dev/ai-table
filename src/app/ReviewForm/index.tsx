@@ -10,7 +10,7 @@ import { FormStyles } from '../../components/review/FormStyles';
 import { useReviewForm, FormState } from '@/hooks/useReviewForm';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useAnalysisLogs } from '@/hooks/useAnalysisLogs';
-import { reviewFormData } from '@/data/reviewFormData';
+
 
 interface ReviewFormProps {
   data: typeof import('@/data/reviewFormData').reviewFormData;
@@ -207,8 +207,8 @@ export default function ReviewForm({ data }: ReviewFormProps) {
     handleRemovePdf
   } = useFileUpload(
     // 分析开始回调
-    async (projectId, filePath) => {
-      const success = await startAnalysisWithBackend(projectId, filePath);
+    async (filePath) => {
+      const success = await startAnalysisWithBackend( filePath);
       if (success) {
         setAiRecommendationsAvailable(true);
         setShowEvaluationAI(true);

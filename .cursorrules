@@ -190,7 +190,6 @@
 data: {"type": "progress", "current": 1, "total": 10, "message": "正在处理第 1/10 页"}
 data: {"type": "reasoning", "reasoning": "这篇论文的研究方向具有一定的创新性……"}
 data: {"type": "content", "content": "总体而言，该论文在研究方法上存在一些不足……"}
-data: {"type": "json_update", "partial_structure": "{\"title\": \"论文标题\", \"authors\": [\"作者1\", \"作者2\"]}"}
 data: {"type": "json_structure", "json_structure": "\"abstract\": \"论文摘要内容...\""}
 data: {"type": "json_complete", "json_structure": "{\"title\": \"论文标题\", \"authors\": [\"作者1\", \"作者2\"], \"abstract\": \"论文摘要内容...\", \"keywords\": [\"关键词1\", \"关键词2\"], \"evaluation\": {\"originality\": 4, \"significance\": 3, \"validity\": 4, \"organization\": 3, \"clarity\": 4, \"recommendation\": \"接受\"}}"}
 data: {"type": "complete", "message": "评审完成"}
