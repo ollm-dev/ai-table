@@ -7,7 +7,6 @@ export interface FormHeaderProps {
   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   handleRemovePdf: () => void;
   handleUploadPdf: () => void;
-  uploading: boolean;
   uploadError: string | null;
   uploadSuccess: boolean;
 }

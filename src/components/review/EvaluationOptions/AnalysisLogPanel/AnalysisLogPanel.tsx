@@ -3,7 +3,6 @@ import { UploadIcon } from "lucide-react";
 import Markdown from '@/components/markdown';
 import { AnalysisLogPanelProps } from "@/types/review/EvaluationOptions/EvaluationOptionsSection";
 import { useState, useRef, useMemo, useEffect, useCallback } from "react";
-
 export default function AnalysisLogPanel({ 
     analysisLogs, 
     isAnalyzing, 
@@ -74,8 +73,7 @@ export default function AnalysisLogPanel({
           case 'content':
             return log.type === 'content' ;
           case 'json_structure':
-            return log.type === 'json_structure' || 
-              (log.type === 'json_complete' && !log.content.includes('json_structure'));
+            return log.type === 'json_structure'
           default:
             return false;
         }

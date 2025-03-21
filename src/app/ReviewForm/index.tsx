@@ -199,7 +199,6 @@ export default function ReviewForm({ data }: ReviewFormProps) {
   
   const {
     pdfFile,
-    uploading,
     uploadError,
     fileInputRef,
     handleFileChange,
@@ -281,7 +280,6 @@ export default function ReviewForm({ data }: ReviewFormProps) {
           handleFileChange={handleFileChange}
           handleRemovePdf={handleRemovePdf}
           handleUploadPdf={handleUpload}
-          uploading={uploading}
           uploadError={uploadError}
           uploadSuccess={uploadSuccess}
         />

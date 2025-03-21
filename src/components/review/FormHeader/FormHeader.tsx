@@ -13,7 +13,6 @@ export function FormHeader({
   handleFileChange,
   handleRemovePdf,
   handleUploadPdf,
-  uploading,
   uploadError,
   uploadSuccess
 }: FormHeaderProps) {
@@ -74,7 +73,7 @@ export function FormHeader({
                   size="sm"
                   className="ml-3 h-9 px-5 text-sm rounded-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 transition-all duration-300 shadow-md hover:shadow-lg"
                   onClick={handleUploadPdf}
-                  disabled={uploading}
+                  disabled={uploadSuccess}
                 >
                   {uploadSuccess ? (
                     <span className="flex items-center">
