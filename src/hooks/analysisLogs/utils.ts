@@ -131,6 +131,12 @@ export const transformApiJsonToFormData = (apiJson: any): any => {
             else if (typeof evaluation[apiKey] === 'string') {
               formData.evaluationSections[sectionIndex].aiRecommendation = evaluation[apiKey];
             }
+            
+            // 处理AI建议原因 - 查找对应的reason字段
+            const reasonKey = `${apiKey}_reason`;
+            if (evaluation[reasonKey] && typeof evaluation[reasonKey] === 'string') {
+              formData.evaluationSections[sectionIndex].aiReason = evaluation[reasonKey];
+            }
           }
         }
       });

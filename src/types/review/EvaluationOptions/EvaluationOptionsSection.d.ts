@@ -10,6 +10,7 @@ export interface EvaluationSection {
   required: boolean;
   options: string[];
   aiRecommendation?: string;
+  aiReason?: string;
 }
 export interface EvaluationOptionsSectionProps {
   /** 评估部分列表 */

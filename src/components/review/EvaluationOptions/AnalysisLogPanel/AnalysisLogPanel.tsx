@@ -21,6 +21,7 @@ export default function AnalysisLogPanel({
     const scrollPositionRef = useRef(0);
     const hasHandledScrollRef = useRef(false);
     const isHandlingScrollRef = useRef(false);
+    const needsInitialScrollRef = useRef(true);
   
     // 处理滚动事件
     const handleScroll = useCallback(() => {
@@ -33,10 +34,10 @@ export default function AnalysisLogPanel({
         return;
       }
   
-      const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 10;
+      const isAtBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 30;
       userScrolledRef.current = !isAtBottom;
       scrollPositionRef.current = container.scrollTop;
-      setAutoScroll(!userScrolledRef.current);
+      setAutoScroll(isAtBottom);
   
       setTimeout(() => {
         isHandlingScrollRef.current = false;
@@ -52,17 +53,37 @@ export default function AnalysisLogPanel({
       }
     }, [handleScroll]);
   
-    // 自动滚动到底部
+    // 处理初始滚动 - 只在组件挂载和标签切换时执行一次
     useEffect(() => {
-      if (autoScroll && logContainerRef.current && !hasHandledScrollRef.current) {
+      if (logContainerRef.current && needsInitialScrollRef.current) {
+        logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
+        needsInitialScrollRef.current = false;
+      }
+    }, [activeTab]);
+  
+    // 自动滚动到底部 - 仅当内容更新且autoScroll为true时
+    useEffect(() => {
+      // 只有当自动滚动模式开启、容器存在、且有新内容时才滚动
+      if (autoScroll && logContainerRef.current && analysisLogs.length > 0 && isAnalyzing) {
+        // 使用防抖，减少频繁滚动
+        if (scrollTimerRef.current) {
+          clearTimeout(scrollTimerRef.current);
+        }
+        
         scrollTimerRef.current = setTimeout(() => {
           if (logContainerRef.current) {
             logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
-            hasHandledScrollRef.current = true;
           }
         }, 100);
       }
-    }, [analysisLogs, autoScroll]);
+    }, [analysisLogs, autoScroll, isAnalyzing]);
+    
+    // 当标签切换时重置自动滚动
+    useEffect(() => {
+      setAutoScroll(true);
+      userScrolledRef.current = false;
+      needsInitialScrollRef.current = true; // 标签切换时需要重新初始滚动
+    }, [activeTab]);
   
     // 缓存过滤后的日志
     const filteredLogs = useMemo(() => {
@@ -384,9 +405,9 @@ export default function AnalysisLogPanel({
               {formattedJson}
             </pre>
             
-            {/* 悬浮操作按钮 */}
+            悬浮操作按钮
             <div className="absolute top-2 right-2 flex gap-2">
-              <button 
+              {/* <button 
                 onClick={copyToClipboard}
                 className="p-1.5 bg-white rounded-md border border-gray-200 hover:bg-gray-50 transition-colors"
                 title="复制JSON"
@@ -404,7 +425,7 @@ export default function AnalysisLogPanel({
                     <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
                   </svg>
                 )}
-              </button>
+              </button> */}
             </div>
           </div>
           
@@ -545,7 +566,9 @@ export default function AnalysisLogPanel({
                 containIntrinsicSize: '0 480px',
                 willChange: 'transform',
                 transform: 'translateZ(0)',
-                backfaceVisibility: 'hidden'
+                backfaceVisibility: 'hidden',
+                // 新增：初始滚动位置在底部
+                scrollBehavior: 'smooth'
               }}
             >
               {analysisLogs.length === 0 ? (
@@ -603,10 +626,10 @@ export default function AnalysisLogPanel({
             </div>
             
             {/* 滚动控制按钮 - 仅在分析中且用户手动滚动后显示 */}
-            {isAnalyzing && !autoScroll && activeTab !== 'json_structure' && filteredLogs.length > 0 && (
+            {!autoScroll && activeTab !== 'json_structure' && filteredLogs.length > 0 && (
               <button
                 onClick={scrollToBottom}
-                className="absolute bottom-4 right-4 bg-white bg-opacity-90 p-2 rounded-full shadow-md hover:shadow-lg border border-gray-200 transition-all duration-300"
+                className="absolute bottom-4 right-4 bg-white bg-opacity-90 p-2.5 rounded-full shadow-md hover:shadow-lg border border-gray-200 transition-all duration-300 hover:bg-primary-50 z-10"
                 aria-label="滚动到底部"
               >
                 <svg 

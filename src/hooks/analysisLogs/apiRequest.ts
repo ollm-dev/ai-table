@@ -116,6 +116,8 @@ export const processStream = async (
                   updateLogContent('json_structure', newJsonStructure, false);
                   
                   // 尝试解析和更新表单数据（如果是有效的JSON）
+                  // 注释掉自动更新表单数据的代码，等待用户手动点击"应用AI填充"按钮
+                  /* 
                   try {
                     if (sanitizedJson.trim().startsWith('{') && sanitizedJson.trim().endsWith('}')) {
                       let jsonData = JSON.parse(sanitizedJson);
@@ -126,6 +128,7 @@ export const processStream = async (
                     console.log('⚠️ 部分JSON结构不是有效的JSON对象:', jsonError);
                     // 这是正常的，因为流式数据可能不是完整的JSON
                   }
+                  */
                   
                   return newJsonStructure;
                 });
@@ -173,7 +176,7 @@ export const processStream = async (
                     const transformedData = transformApiJsonToFormData(completeStructure);
                     
                     // 使用非部分更新模式，确保完整更新
-                    updateFormData(transformedData, false);
+                    // updateFormData(transformedData, false);
                     
                     // 添加成功处理的日志
                     addAnalysisLog(`成功更新表单数据结构`, "success");
