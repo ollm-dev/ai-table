@@ -2,11 +2,11 @@
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { FormHeader } from '../../components/review/FormHeader';
-import { ProjectInfoSection } from '../../components/review/ProjectInfoSection';
-import { EvaluationOptionsSection } from '../../components/review/EvaluationOptionsSection';
-import { TextualEvaluationSection } from '../../components/review/TextualEvaluationSection';
-import { FormStyles } from '../../components/review/FormStyles';
+import { FormHeader } from '@/components/review/FormHeader';
+import { ProjectInfoSection } from '@/components/review/ProjectInfoSection';
+import { EvaluationOptionsSection } from '@/components/review/EvaluationOptionsSection';
+import { TextualEvaluationSection } from '@/components/review/TextualEvaluationSection';
+import { FormStyles } from '@/app/ReviewForm/FormStyles';
 import { useReviewForm, FormState } from '@/hooks/useReviewForm';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useAnalysisLogs } from '@/hooks/useAnalysisLogs';
@@ -208,7 +208,7 @@ export default function ReviewForm({ data }: ReviewFormProps) {
   } = useFileUpload(
     // 分析开始回调
     async (filePath) => {
-      const success = await startAnalysisWithBackend( filePath);
+      const success = await startAnalysisWithBackend(filePath);
       if (success) {
         setAiRecommendationsAvailable(true);
         setShowEvaluationAI(true);
@@ -231,7 +231,7 @@ export default function ReviewForm({ data }: ReviewFormProps) {
   
   // 处理上传按钮点击
   const handleUpload = async () => {
-    await handleUploadPdf(currentFormData?.projectInfo?.applicationId || "unknown", () => {
+    await handleUploadPdf(() => {
       setAiRecommendationsAvailable(false);
       setShowEvaluationAI(false);
       setAnalysisLogs([]);

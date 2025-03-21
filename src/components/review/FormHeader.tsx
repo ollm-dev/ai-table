@@ -2,17 +2,18 @@ import React from 'react';
 import { CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileIcon, UploadIcon, XIcon } from "lucide-react";
+import { FormHeaderProps } from "@/types/review/FormHeader";
 
-interface FormHeaderProps {
-  formTitle: string;
-  pdfFile: File | null;
-  fileInputRef: React.RefObject<HTMLInputElement>;
-  handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleRemovePdf: () => void;
-  handleUploadPdf: () => void;
-  uploading: boolean;
-  uploadError: string | null;
-}
+// interface FormHeaderProps {
+//   formTitle: string;
+//   pdfFile: File | null;
+//   fileInputRef: React.RefObject<HTMLInputElement>;
+//   handleFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+//   handleRemovePdf: () => void;
+//   handleUploadPdf: () => void;
+//   uploading: boolean;
+//   uploadError: string | null;
+// }
 
 export function FormHeader({
   formTitle,

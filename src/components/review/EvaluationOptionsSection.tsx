@@ -2,47 +2,47 @@ import React, { useState, useRef, useMemo, useEffect, useCallback } from 'react'
 import { Badge } from "@/components/ui/badge";
 import { UploadIcon } from "lucide-react";
 import Markdown from '../markdown';
+import { EvaluationOptionsSectionProps, EvaluationSectionItemProps, AnalysisLogPanelProps, EvaluationSection } from "@/types/review/EvaluationOptionsSection";
 
-
-interface EvaluationSection {
-  id: string;
-  title: string;
-  required: boolean;
-  options: string[];
-  aiRecommendation?: string;
-}
-interface EvaluationOptionsSectionProps {
-  evaluationSections: EvaluationSection[];
-  formState: {
-    evaluations: Record<string, string>;
-    textEvals: Record<string, string>;
-  };
-  handleRadioChange: (sectionId: string, value: string) => void;
-  isAnalyzing: boolean;
-  pdfFile: File | null;
-  aiRecommendationsAvailable: boolean;
-  showEvaluationAI: boolean;
-  analysisLogs: Array<{time: string, content: string, type: string}>;
-  progress: number;
-  statusMessage: string;
-  onApplyJsonStructure?: (jsonStructure: string) => void;
-}
-interface EvaluationSectionItemProps {
-  section: EvaluationSection;
-  sectionIndex: number;
-  selectedValue: string;
-  handleRadioChange: (sectionId: string, value: string) => void;
-  aiRecommendationsAvailable: boolean;
-  showEvaluationAI: boolean;
-}
-interface AnalysisLogPanelProps {
-  analysisLogs: Array<{time: string, content: string, type: string}>;
-  isAnalyzing: boolean;
-  pdfFile: File | null;
-  progress: number;
-  statusMessage: string;
-  onApplyJsonStructure?: (jsonStructure: string) => void;
-}
+// interface EvaluationSection {
+//   id: string;
+//   title: string;
+//   required: boolean;
+//   options: string[];
+//   aiRecommendation?: string;
+// }
+// interface EvaluationOptionsSectionProps {
+//   evaluationSections: EvaluationSection[];
+//   formState: {
+//     evaluations: Record<string, string>;
+//     textEvals: Record<string, string>;
+//   };
+//   handleRadioChange: (sectionId: string, value: string) => void;
+//   isAnalyzing: boolean;
+//   pdfFile: File | null;
+//   aiRecommendationsAvailable: boolean;
+//   showEvaluationAI: boolean;
+//   analysisLogs: Array<{time: string, content: string, type: string}>;
+//   progress: number;
+//   statusMessage: string;
+//   onApplyJsonStructure?: (jsonStructure: string) => void;
+// }
+// interface EvaluationSectionItemProps {
+//   section: EvaluationSection;
+//   sectionIndex: number;
+//   selectedValue: string;
+//   handleRadioChange: (sectionId: string, value: string) => void;
+//   aiRecommendationsAvailable: boolean;
+//   showEvaluationAI: boolean;
+// }
+// interface AnalysisLogPanelProps {
+//   analysisLogs: Array<{time: string, content: string, type: string}>;
+//   isAnalyzing: boolean;
+//   pdfFile: File | null;
+//   progress: number;
+//   statusMessage: string;
+//   onApplyJsonStructure?: (jsonStructure: string) => void;
+// }
 
 
 

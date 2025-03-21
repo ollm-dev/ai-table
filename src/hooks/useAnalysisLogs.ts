@@ -503,7 +503,7 @@ export function useAnalysisLogs() {
   }, [addAnalysisLog]);
   
   // 开始分析
-  const startAnalysisWithBackend = async ( filePath: string) => {
+  const startAnalysisWithBackend = async (filePath: string) => {
     try {
       // 重置所有状态
       setIsAnalyzing(true);
@@ -634,11 +634,11 @@ export function useAnalysisLogs() {
                         return newText;
                       });
                       
-                      // 如果推理中包含部分表单结构数据，尝试提取并更新
-                      if (data.partial_structure) {
-                        console.log('🧩 推理中的部分结构:', data.partial_structure);
-                        updateFormData(data.partial_structure, true);
-                      }
+                      // // 如果推理中包含部分表单结构数据，尝试提取并更新
+                      // if (data.partial_structure) {
+                      //   console.log('🧩 推理中的部分结构:', data.partial_structure);
+                      //   updateFormData(data.partial_structure, true);
+                      // }
                     }
                     break;
                     
@@ -655,11 +655,11 @@ export function useAnalysisLogs() {
                         return newContent;
                       });
                       
-                      // 如果内容中包含部分表单结构数据，尝试提取并更新
-                      if (data.partial_structure) {
-                        console.log('🧩 内容中的部分结构:', data.partial_structure);
-                        updateFormData(data.partial_structure, true);
-                      }
+                      // // 如果内容中包含部分表单结构数据，尝试提取并更新
+                      // if (data.partial_structure) {
+                      //   console.log('🧩 内容中的部分结构:', data.partial_structure);
+                      //   updateFormData(data.partial_structure, true);
+                      // }
                     }
                     break;
                     
@@ -668,7 +668,7 @@ export function useAnalysisLogs() {
                       // 更新推理文本
                       if (data.json_structure) {
                         console.log('🤔 推理内容:', data.json_structure);
-                        setReasoningText(prev => {
+                        setJsonStructure(prev => {
                           // 清理HTML标签
                           const sanitizedReasoning = sanitizeHtml(data.json_structure);
                           const newText = prev + sanitizedReasoning;
@@ -677,11 +677,11 @@ export function useAnalysisLogs() {
                           return newText;
                         });
                         
-                        // 如果推理中包含部分表单结构数据，尝试提取并更新
-                        if (data.partial_structure) {
-                          console.log('🧩 推理中的部分结构:', data.partial_structure);
-                          updateFormData(data.partial_structure, true);
-                        }
+                        // // 如果推理中包含部分表单结构数据，尝试提取并更新
+                        // if (data.partial_structure) {
+                        //   console.log('🧩 推理中的部分结构:', data.partial_structure);
+                        //   updateFormData(data.partial_structure, true);
+                        // }
                       }
                     break;
                     
@@ -694,7 +694,6 @@ export function useAnalysisLogs() {
                       try {
                         // 尝试解析和更新完整数据
                         let completeStructure = data.json_complete;
-                        console.log('🔍 完整JSON结构:', completeStructure);
                         if (typeof completeStructure === 'string') {
                           try {
                             completeStructure = JSON.parse(completeStructure);
