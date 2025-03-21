@@ -405,7 +405,7 @@ export default function AnalysisLogPanel({
               {formattedJson}
             </pre>
             
-            悬浮操作按钮
+          
             <div className="absolute top-2 right-2 flex gap-2">
               <button 
                 onClick={copyToClipboard}
