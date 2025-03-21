@@ -15,13 +15,15 @@ export default function AnalysisLogPanel({
     const [activeTab, setActiveTab] = useState<'reasoning' | 'content' | 'json_structure'>('reasoning');
     const logContainerRef = useRef<HTMLDivElement>(null);
     const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    const [autoScroll, setAutoScroll] = useState(true);
+    // 默认不自动滚动，让用户有完全的控制权
+    const [autoScroll, setAutoScroll] = useState(false);
     const [showFillSuccess, setShowFillSuccess] = useState(false);
     const userScrolledRef = useRef(false);
     const scrollPositionRef = useRef(0);
     const hasHandledScrollRef = useRef(false);
     const isHandlingScrollRef = useRef(false);
-    const needsInitialScrollRef = useRef(true);
+    // 默认不进行初始滚动，组件初始加载时不会自动滚动到底部
+    const needsInitialScrollRef = useRef(false);
   
     // 处理滚动事件
     const handleScroll = useCallback(() => {
@@ -53,18 +55,16 @@ export default function AnalysisLogPanel({
       }
     }, [handleScroll]);
   
-    // 处理初始滚动 - 只在组件挂载和标签切换时执行一次
+    // 处理初始滚动 - 修改为不自动滚动到底部
     useEffect(() => {
-      if (logContainerRef.current && needsInitialScrollRef.current) {
-        logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
-        needsInitialScrollRef.current = false;
-      }
+      // 移除自动滚动到底部的逻辑，让用户自己控制滚动位置
+      needsInitialScrollRef.current = false;
     }, [activeTab]);
   
-    // 自动滚动到底部 - 仅当内容更新且autoScroll为true时
+    // 自动滚动到底部 - 仅当内容更新且用户手动滚动到底部时才滚动
     useEffect(() => {
-      // 只有当自动滚动模式开启、容器存在、且有新内容时才滚动
-      if (autoScroll && logContainerRef.current && analysisLogs.length > 0 && isAnalyzing) {
+      // 只有当用户已滚动到底部（autoScroll为true）时才启用自动滚动
+      if (autoScroll && logContainerRef.current && analysisLogs.length > 0) {
         // 使用防抖，减少频繁滚动
         if (scrollTimerRef.current) {
           clearTimeout(scrollTimerRef.current);
@@ -76,14 +76,22 @@ export default function AnalysisLogPanel({
           }
         }, 100);
       }
-    }, [analysisLogs, autoScroll, isAnalyzing]);
+    }, [analysisLogs, autoScroll, isAnalyzing, activeTab, jsonStructure]);
     
-    // 当标签切换时重置自动滚动
+    // 当标签切换时保持用户的滚动偏好，不强制重置
     useEffect(() => {
-      setAutoScroll(true);
-      userScrolledRef.current = false;
-      needsInitialScrollRef.current = true; // 标签切换时需要重新初始滚动
-    }, [activeTab]);
+      // 切换标签时不重置自动滚动状态，尊重用户的选择
+      needsInitialScrollRef.current = false; // 不进行自动初始滚动
+      
+      // 如果用户之前已滚动到底部，切换标签后保持此状态
+      const runAfterRender = setTimeout(() => {
+        if (autoScroll && logContainerRef.current) {
+          logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
+        }
+      }, 0);
+      
+      return () => clearTimeout(runAfterRender);
+    }, [activeTab, autoScroll]);
   
     // 缓存过滤后的日志
     const filteredLogs = useMemo(() => {
@@ -224,7 +232,15 @@ export default function AnalysisLogPanel({
         setAutoScroll(true);
         userScrolledRef.current = false;
       }
-    }, []);
+      
+      // 如果是AI填充标签页，也滚动JSON容器
+      if (activeTab === 'json_structure') {
+        const jsonContainer = document.querySelector('.json-container');
+        if (jsonContainer) {
+          jsonContainer.scrollTop = jsonContainer.scrollHeight;
+        }
+      }
+    }, [activeTab]);
   
     // 添加一个固定字符计数算法，避免过长内容导致的布局抖动
     function getStableDisplayContent(content: string): string {
@@ -337,6 +353,42 @@ export default function AnalysisLogPanel({
     // JSON标签页内容渲染器
     const JsonTabContent = () => {
       const [copied, setCopied] = useState(false);
+      const jsonContainerRef = useRef<HTMLDivElement>(null);
+      
+      // 使用 useEffect 确保 JsonTabContent 组件的滚动行为与其他标签页一致
+      useEffect(() => {
+        const jsonContainer = jsonContainerRef.current;
+        if (!jsonContainer) return;
+        
+        // 定义滚动处理函数
+        const handleJsonScroll = (e: Event) => {
+          e.stopPropagation();
+          
+          if (!jsonContainer) return;
+          
+          // 检查是否在底部
+          const isAtBottom = jsonContainer.scrollHeight - jsonContainer.scrollTop - jsonContainer.clientHeight < 30;
+          
+          // 更新滚动状态
+          userScrolledRef.current = !isAtBottom;
+          setAutoScroll(isAtBottom);
+        };
+        
+        // 添加事件监听器
+        jsonContainer.addEventListener('scroll', handleJsonScroll);
+        
+        // 清理函数
+        return () => {
+          jsonContainer.removeEventListener('scroll', handleJsonScroll);
+        };
+      }, []);
+      
+      // 使JSON容器在内容变化时检查自动滚动状态
+      useEffect(() => {
+        if (autoScroll && jsonContainerRef.current && jsonStructure) {
+          jsonContainerRef.current.scrollTop = jsonContainerRef.current.scrollHeight;
+        }
+      }, [jsonStructure, autoScroll]);
       
       // 格式化JSON字符串
       const formattedJson = useMemo(() => {
@@ -400,7 +452,22 @@ export default function AnalysisLogPanel({
 
       return (
         <div className="flex flex-col h-full relative">
-          <div className="flex-1 overflow-auto mb-4 bg-gray-50 p-3 rounded-lg border border-gray-200 relative">
+          <div 
+            ref={jsonContainerRef}
+            className="flex-1 overflow-auto mb-4 bg-gray-50 p-3 rounded-lg border border-gray-200 relative stable-height-container json-container" 
+            style={{
+              height: '400px', // 固定高度，防止抖动
+              position: 'relative',
+              transform: 'translateZ(0)',
+              willChange: 'transform',
+              backfaceVisibility: 'hidden',
+              contain: 'paint layout',
+              scrollBehavior: 'smooth',
+              overscrollBehavior: 'contain',
+              scrollbarWidth: 'thin',
+              scrollbarColor: '#cbd5e0 #f7fafc',
+            }}
+          >
             <pre className="text-xs text-gray-700 whitespace-pre-wrap font-mono">
               {formattedJson}
             </pre>
@@ -555,7 +622,7 @@ export default function AnalysisLogPanel({
               ref={logContainerRef}
               className="flex-1 bg-white p-5 rounded-xl text-sm shadow-inner border border-gray-200 stable-height-container" 
               style={{ 
-                height: '480px',
+                height: activeTab === 'json_structure' ? '500px' : '480px', // 为 JSON 标签页提供足够空间
                 overflowY: 'auto',
                 overscrollBehavior: 'contain',
                 scrollbarWidth: 'thin',
@@ -596,7 +663,9 @@ export default function AnalysisLogPanel({
               ) : (
                 <div className="space-y-3 terminal-text text-sm h-full content-stable">
                   {activeTab === 'json_structure' ? (
-                    <JsonTabContent />
+                    <div className="stable-display-layer">
+                      <JsonTabContent />
+                    </div>
                   ) : (
                     filteredLogs.length > 0 ? (
                       <div className="stable-display-layer">
@@ -625,8 +694,32 @@ export default function AnalysisLogPanel({
               )}
             </div>
             
-            {/* 滚动控制按钮 - 仅在分析中且用户手动滚动后显示 */}
-            {!autoScroll && activeTab !== 'json_structure' && filteredLogs.length > 0 && (
+            {/* 滚动控制按钮 - 专用于AI填充标签页 */}
+            {activeTab === 'json_structure' && !autoScroll && jsonStructure && (
+              <button
+                onClick={scrollToBottom}
+                className="absolute bottom-4 right-4 bg-white bg-opacity-90 p-2.5 rounded-full shadow-md hover:shadow-lg border border-gray-200 transition-all duration-300 hover:bg-primary-50 z-10"
+                aria-label="滚动到底部"
+              >
+                <svg 
+                  xmlns="http://www.w3.org/2000/svg" 
+                  width="20" 
+                  height="20" 
+                  viewBox="0 0 24 24" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  strokeWidth="2" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  className="text-primary-500"
+                >
+                  <path d="M12 5v14M5 12l7 7 7-7"/>
+                </svg>
+              </button>
+            )}
+
+            {/* 滚动控制按钮 - 不再区分标签页，统一逻辑 */}
+            {!autoScroll && activeTab !== 'json_structure' && (
               <button
                 onClick={scrollToBottom}
                 className="absolute bottom-4 right-4 bg-white bg-opacity-90 p-2.5 rounded-full shadow-md hover:shadow-lg border border-gray-200 transition-all duration-300 hover:bg-primary-50 z-10"
