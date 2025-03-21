@@ -3,7 +3,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { LightbulbIcon } from "@/components/ui/icons";
-import { TextualEvaluation, TextualEvaluationSectionProps, TextualEvaluationItemProps } from '@/types/review/TextualEvaluationSection';
+import { TextualEvaluation, TextualEvaluationSectionProps, TextualEvaluationItemProps } from '@/types/review/TextualEvalution/TextualEvaluationSection';
 
 
 

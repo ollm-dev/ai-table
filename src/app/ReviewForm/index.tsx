@@ -204,7 +204,8 @@ export default function ReviewForm({ data }: ReviewFormProps) {
     fileInputRef,
     handleFileChange,
     handleUploadPdf,
-    handleRemovePdf
+    handleRemovePdf,
+    uploadSuccess
   } = useFileUpload(
     // 分析开始回调
     async (filePath) => {
@@ -282,6 +283,7 @@ export default function ReviewForm({ data }: ReviewFormProps) {
           handleUploadPdf={handleUpload}
           uploading={uploading}
           uploadError={uploadError}
+          uploadSuccess={uploadSuccess}
         />
         <CardContent className="p-8 lg:p-14">
           <ProjectInfoSection 

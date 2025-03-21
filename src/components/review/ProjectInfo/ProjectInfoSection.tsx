@@ -1,5 +1,5 @@
 import React from 'react';
-import { ProjectInfoSectionProps } from '@/types/review/ProjectInfoSection';
+import { ProjectInfoSectionProps } from '@/types/review/ProjectInfo/ProjectInfoSection';
 
 
 

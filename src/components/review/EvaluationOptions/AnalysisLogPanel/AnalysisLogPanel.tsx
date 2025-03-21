@@ -1,7 +1,7 @@
 import React from "react";
 import { UploadIcon } from "lucide-react";
-import Markdown from '../../../markdown';
-import { AnalysisLogPanelProps } from "@/types/review/EvaluationOptionsSection";
+import Markdown from '@/components/markdown';
+import { AnalysisLogPanelProps } from "@/types/review/EvaluationOptions/EvaluationOptionsSection";
 import { useState, useRef, useMemo, useEffect, useCallback } from "react";
 
 export default function AnalysisLogPanel({ 

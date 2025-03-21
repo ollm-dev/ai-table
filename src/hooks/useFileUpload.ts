@@ -6,6 +6,7 @@ export function useFileUpload(onAnalysisStart: (filePath: string) => Promise<voi
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadSuccess, setUploadSuccess] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   /**
@@ -46,7 +47,7 @@ export function useFileUpload(onAnalysisStart: (filePath: string) => Promise<voi
     try {
       setUploading(true);
       setUploadError(null);
-      
+     
       // 重置AI建议状态
       onResetAI();
       
@@ -121,7 +122,7 @@ export function useFileUpload(onAnalysisStart: (filePath: string) => Promise<voi
       const result = await response.json();
       console.log('✅ 上传成功，服务器返回:', result);
       addAnalysisLog(`文件上传成功: ${result.file_name || pdfFile.name}`, "upload-success");
-      
+      setUploadSuccess(true);
       // 开始分析
       if (result.file_path) {
         // 使用返回的文件路径调用分析API
@@ -143,7 +144,7 @@ export function useFileUpload(onAnalysisStart: (filePath: string) => Promise<voi
         addAnalysisLog(errorMessage, "error");
       }
     } finally {
-      setUploading(false);
+      setUploadSuccess(false);
     }
   };
   
@@ -164,6 +165,7 @@ export function useFileUpload(onAnalysisStart: (filePath: string) => Promise<voi
     pdfFile,
     uploading,
     uploadError,
+    uploadSuccess,
     fileInputRef,
     handleFileChange,
     handleUploadPdf,

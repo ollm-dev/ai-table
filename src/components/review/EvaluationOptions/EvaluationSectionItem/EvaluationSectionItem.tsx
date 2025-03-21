@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
-import {EvaluationSectionItemProps } from "@/types/review/EvaluationOptionsSection";
+import {EvaluationSectionItemProps } from "@/types/review/EvaluationOptions/EvaluationOptionsSection";
 
 export default function EvaluationSectionItem({
     section,

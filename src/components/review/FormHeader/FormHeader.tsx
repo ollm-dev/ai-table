@@ -2,7 +2,7 @@ import React from 'react';
 import { CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FileIcon, UploadIcon, XIcon } from "lucide-react";
-import { FormHeaderProps } from "@/types/review/FormHeader";
+import { FormHeaderProps } from "@/types/review/FormHeader/FormHeader";
 
 
 
@@ -14,7 +14,8 @@ export function FormHeader({
   handleRemovePdf,
   handleUploadPdf,
   uploading,
-  uploadError
+  uploadError,
+  uploadSuccess
 }: FormHeaderProps) {
   return (
     <CardHeader className="bg-gradient-to-r from-gray-50 via-white to-gray-50 border-b border-gray-100 py-12 px-14 relative overflow-hidden">
@@ -75,10 +76,9 @@ export function FormHeader({
                   onClick={handleUploadPdf}
                   disabled={uploading}
                 >
-                  {uploading ? (
+                  {uploadSuccess ? (
                     <span className="flex items-center">
-                      <span className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full mr-2"></span>
-                      上传中...
+                     上传成功😉
                     </span>
                   ) : '确认上传'}
                 </Button>

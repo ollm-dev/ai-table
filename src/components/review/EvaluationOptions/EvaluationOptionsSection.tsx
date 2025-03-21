@@ -1,5 +1,5 @@
 import React from 'react';
-import { EvaluationOptionsSectionProps} from "@/types/review/EvaluationOptionsSection";
+import { EvaluationOptionsSectionProps} from "@/types/review/EvaluationOptions/EvaluationOptionsSection";
 import AnalysisLogPanel from "./AnalysisLogPanel/AnalysisLogPanel";
 import EvaluationSectionItem from "./EvaluationSectionItem/EvaluationSectionItem";
 
