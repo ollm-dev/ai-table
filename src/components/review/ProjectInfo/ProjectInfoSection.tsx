@@ -1,20 +1,7 @@
 import React from 'react';
 import { ProjectInfoSectionProps } from '@/types/review/ProjectInfoSection';
 
-// interface ProjectInfoSectionProps {
-//   projectInfo: {
-//     projectTitle: string;
-//     projectType: string;
-//     researchField: string;
-//     applicantName: string;
-//     applicationId: string;
-//   };
-//   aiRecommendationsAvailable: boolean;
-//   editingField: string | null;
-//   startEditing: (field: string) => void;
-//   stopEditing: () => void;
-//   handleProjectInfoChange: (field: string, value: string) => void;
-// }
+
 
 export function ProjectInfoSection({
   projectInfo,

@@ -22,39 +22,67 @@
 下面是目前的项目结构 ，我可能会根据需要 ， 调整项目结构 ， 但是 ， 请 不要 删除 任何 文件 ， 除非 我 明确 告诉你 删除 文件 。
 
 项目根目录
-├── .next  # Next.js 构建输出目录
-├── doc  # 文档目录
-├── node_modules  # 项目依赖模块目录
-├── public  # 静态资源目录
+AI-TABLE
+├── .next
+├── node_modules
+├── public
 ├── src
 │   ├── app
 │   │   ├── ReviewForm
-│   │   │    ├── index.tsx
+│   │   │      ├── css.tsx
+│   │   │      ├── index.tsx
 │   │   │   ├── globals.css
 │   │   │   ├── layout.tsx
 │   │   │   └── page.tsx
-│   ├── components
-│   │   ├── markdown  # markdown 相关组件目录
-│   │   └── review
-│   │       ├── EvaluationOptionsSection.tsx  # 评估选项相关组件
-│   │       ├── FormHeader.tsx  # 表单头部组件
-│   │       ├── FormStyles.tsx  # 表单样式相关文件
-│   │       ├── ProjectInfoSection.tsx  # 项目信息相关组件
-│   │       └── TextualEvaluationSection.tsx  # 文本评估相关组件
-│   ├── ui  # UI 相关组件目录
-│   ├── data  # 数据相关目录
-│   ├── hooks  # 自定义 hooks 目录
-│   └── lib  # 工具库目录
-├── .cursorrules  # 可能与光标规则相关的配置文件
-├── .gitignore  # Git 忽略文件配置
-├── eslint.config.mjs  # ESLint 配置文件
-├── next-env.d.ts  # Next.js 环境类型声明文件
-├── next.config.mjs  # Next.js 配置文件
-├── package.json  # 项目依赖及脚本管理文件
-├── pnpm-lock.yaml  # pnpm 依赖锁文件
-├── postcss.config.js  # PostCSS 配置文件
-└── README.md  # 项目说明文档 
-
+│   │   ├── components
+│   │   │   ├── markdown
+│   │   │   │   ├── index.tsx
+│   │   │   │   ├── markdown.css
+│   │   │   │   └── PlainTextFallback.tsx
+│   │   │   ├── review
+│   │   │   │   ├── EvaluationOptions
+│   │   │   │   │   ├── AnalysisLogPanel
+│   │   │   │   │   │   └── AnalysisLogPanel.tsx
+│   │   │   │   │   ├── EvaluationSectionItem
+│   │   │   │   │   │   └── EvaluationSectionItem.tsx
+│   │   │   │   │   └── EvaluationOptionsSection.tsx
+│   │   │   │   ├── FormHeader
+│   │   │   │   │   └── FormHeader.tsx
+│   │   │   │   ├── ProjectInfo
+│   │   │   │   │   └── ProjectInfoSection.tsx
+│   │   │   │   └── TextualEvaluation
+│   │   │   │       └── TextualEvaluationSection.tsx
+│   │   ├── ui
+│   │   ├── data
+│   │   │   └── reviewFormData.ts
+│   │   ├── hooks
+│   │   │   ├── useAnalysisLogs.ts
+│   │   │   ├── useFileUpload.ts
+│   │   │   └── useReviewForm.ts
+│   │   ├── lib
+│   │   │   ├── config.ts
+│   │   │   └── utils.ts
+│   │   ├── types
+│   │   │   ├── other
+│   │   │   └── review
+│   │   │       ├── EvaluationOptionsSection.d.ts
+│   │   │       ├── FormHeader.d.ts
+│   │   │       ├── ProjectInfoSection.d.ts
+│   │   │       └── TextualEvaluationSection.d.ts
+│   │   └── .cursorrules
+├── .env.example
+├── .env.local
+├── .gitignore
+├── eslint.config.mjs
+├── next-env.d.ts
+├── next.config.mjs
+├── package.json
+├── pnpm-lock.yaml
+├── postcss.config.js
+├── prompt.md
+├── readme.md
+├── tailwind.config.js
+└── tsconfig.json
 ## Coding Conventions
 
 - Use TypeScript for type safety

@@ -2,11 +2,11 @@
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
-import { FormHeader } from '@/components/review/FormHeader';
-import { ProjectInfoSection } from '@/components/review/ProjectInfoSection';
-import { EvaluationOptionsSection } from '@/components/review/EvaluationOptionsSection';
-import { TextualEvaluationSection } from '@/components/review/TextualEvaluationSection';
-import { FormStyles } from '@/app/ReviewForm/FormStyles';
+import { FormHeader } from '@/components/review/FormHeader/FormHeader';
+import { ProjectInfoSection } from '@/components/review/ProjectInfo/ProjectInfoSection';
+import { EvaluationOptionsSection } from '@/components/review/EvaluationOptions/EvaluationOptionsSection';
+import { TextualEvaluationSection } from '@/components/review/TextualEvaluation/TextualEvaluationSection';
+import { FormStyles } from '@/app/ReviewForm/css';
 import { useReviewForm, FormState } from '@/hooks/useReviewForm';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useAnalysisLogs } from '@/hooks/useAnalysisLogs';
