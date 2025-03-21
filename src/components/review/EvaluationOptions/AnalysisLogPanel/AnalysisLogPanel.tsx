@@ -9,10 +9,10 @@ export default function AnalysisLogPanel({
     pdfFile,
     progress,
     statusMessage,
-    onApplyJsonStructure
+    onApplyJsonStructure,
+    jsonStructure
   }: AnalysisLogPanelProps) {
     const [activeTab, setActiveTab] = useState<'reasoning' | 'content' | 'json_structure'>('reasoning');
-    const [jsonStructure, setJsonStructure] = useState<string | null>(null);
     const logContainerRef = useRef<HTMLDivElement>(null);
     const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const [autoScroll, setAutoScroll] = useState(true);
@@ -315,6 +315,48 @@ export default function AnalysisLogPanel({
   
     // JSON标签页内容渲染器
     const JsonTabContent = () => {
+      const [copied, setCopied] = useState(false);
+      
+      // 格式化JSON字符串
+      const formattedJson = useMemo(() => {
+        if (!jsonStructure) return '';
+        try {
+          // 尝试解析JSON字符串并格式化
+          const parsedJson = JSON.parse(jsonStructure);
+          return JSON.stringify(parsedJson, null, 2);
+        } catch (e) {
+          // 如果无法解析为JSON，返回原始字符串
+          return jsonStructure;
+        }
+      }, [jsonStructure]);
+      
+      // 复制JSON到剪贴板
+      const copyToClipboard = useCallback(() => {
+        if (!formattedJson) return;
+        
+        navigator.clipboard.writeText(formattedJson)
+          .then(() => {
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+          })
+          .catch(err => {
+            console.error('无法复制到剪贴板:', err);
+          });
+      }, [formattedJson]);
+      
+      // 应用JSON结构
+      const handleApplyJson = useCallback(() => {
+        if (!jsonStructure || !onApplyJsonStructure) return;
+        
+        try {
+          onApplyJsonStructure(jsonStructure);
+          setShowFillSuccess(true);
+          setTimeout(() => setShowFillSuccess(false), 3000);
+        } catch (error) {
+          console.error('应用JSON结构时出错:', error);
+        }
+      }, [jsonStructure, onApplyJsonStructure]);
+
       if (!jsonStructure) {
         return (
           <div className="flex items-center justify-center h-full">
@@ -334,19 +376,63 @@ export default function AnalysisLogPanel({
           </div>
         );
       }
-  
+
       return (
         <div className="flex flex-col h-full relative">
-          <div className="flex-1 overflow-auto mb-4 bg-gray-50 p-3 rounded-lg border border-gray-200">
-            <pre className="text-xs text-gray-700 whitespace-pre-wrap">
-              {jsonStructure}
+          <div className="flex-1 overflow-auto mb-4 bg-gray-50 p-3 rounded-lg border border-gray-200 relative">
+            <pre className="text-xs text-gray-700 whitespace-pre-wrap font-mono">
+              {formattedJson}
             </pre>
+            
+            {/* 悬浮操作按钮 */}
+            <div className="absolute top-2 right-2 flex gap-2">
+              <button 
+                onClick={copyToClipboard}
+                className="p-1.5 bg-white rounded-md border border-gray-200 hover:bg-gray-50 transition-colors"
+                title="复制JSON"
+              >
+                {copied ? (
+                  <span className="text-green-600 text-xs font-medium flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <polyline points="20 6 9 17 4 12"></polyline>
+                    </svg>
+                    <span className="ml-1">已复制</span>
+                  </span>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
+                  </svg>
+                )}
+              </button>
+            </div>
           </div>
-          <div className="flex justify-center">
-            {showFillSuccess && <div className="px-6 py-2 bg-green-100 text-green-800 rounded-xl border border-green-200 shadow-md flex items-center">
+          
+          {/* 底部按钮区域 */}
+          <div className="flex justify-between items-center">
+            {showFillSuccess ? (
+              <div className="px-6 py-2 bg-green-100 text-green-800 rounded-xl border border-green-200 shadow-md flex items-center mr-auto ml-auto">
                 <span className="mr-2">✓</span>
                 <span className="font-medium">应用成功</span>
-            </div>}
+              </div>
+            ) : (
+              <button
+                onClick={handleApplyJson}
+                disabled={!jsonStructure || isAnalyzing}
+                className={`flex items-center justify-center px-4 py-2 rounded-xl transition-all duration-300 border ${
+                  !jsonStructure || isAnalyzing
+                    ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-md border-primary-600 hover:shadow-lg'
+                }`}
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
+                  <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"></path>
+                  <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                  <polyline points="7 3 7 8 15 8"></polyline>
+                </svg>
+                <span className="font-medium">应用AI填充</span>
+              </button>
+            )}
           </div>
         </div>
       );

@@ -219,7 +219,7 @@ data: {"type": "progress", "current": 1, "total": 10, "message": "正在处理�
 data: {"type": "reasoning", "reasoning": "这篇论文的研究方向具有一定的创新性……"}
 data: {"type": "content", "content": "总体而言，该论文在研究方法上存在一些不足……"}
 data: {"type": "json_structure", "json_structure": ""}
-data: {"type": "json_complete", "json_structure": ""}
+data: {"type": "json_complete", "json_complete": ""}
 data: {"type": "complete", "message": "评审完成"}
 ```
 

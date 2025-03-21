@@ -31,7 +31,7 @@ export const processStream = async (
   updateLogContent: (type: string, content: string, append?: boolean) => void,
   addAnalysisLog: (content: string, type?: string) => void,
   updateFormData: (jsonStructure: any, isPartial?: boolean) => void
-) => {
+): Promise<void> => {
   try {
     const { done, value } = await reader.read();
     
@@ -107,14 +107,27 @@ export const processStream = async (
             case 'json_structure':
               // 处理 json_structure 类型消息
               if (data.json_structure) {
-                console.log('🤔 AI填充:', data.json_structure);
+                console.log('🔍 AI结构数据:', data.json_structure);
                 setJsonStructure(prev => {
                   // 清理HTML标签
-                  const sanitizedReasoning = sanitizeHtml(data.json_structure);
-                  const newText = prev + sanitizedReasoning;
+                  const sanitizedJson = sanitizeHtml(data.json_structure);
+                  const newJsonStructure = prev + sanitizedJson;
                   // 使用函数更新方式确保拿到最新的文本内容
-                  updateLogContent('json_structure', newText, false);
-                  return newText;
+                  updateLogContent('json_structure', newJsonStructure, false);
+                  
+                  // 尝试解析和更新表单数据（如果是有效的JSON）
+                  try {
+                    if (sanitizedJson.trim().startsWith('{') && sanitizedJson.trim().endsWith('}')) {
+                      let jsonData = JSON.parse(sanitizedJson);
+                      // 使用部分更新模式，因为这是流式传输的一部分
+                      updateFormData(jsonData, true);
+                    }
+                  } catch (jsonError) {
+                    console.log('⚠️ 部分JSON结构不是有效的JSON对象:', jsonError);
+                    // 这是正常的，因为流式数据可能不是完整的JSON
+                  }
+                  
+                  return newJsonStructure;
                 });
               }
               break;
@@ -175,80 +188,80 @@ export const processStream = async (
               }
               break;
               
-            case 'complete':
-              // 处理完成事件 - 确保数据也同步处理完成
-              console.log('✨ 分析完成');
-              setStatusMessage(data.message || '分析完成');
+            // case 'complete':
+            //   // 处理完成事件 - 确保数据也同步处理完成
+            //   console.log('✨ 分析完成');
+            //   setStatusMessage(data.message || '分析完成');
               
-              // 自定义完成消息，包含json_structure信息
-              let completeMessage = data.message || "分析完成: 已生成评审建议";
+            //   // 自定义完成消息，包含json_structure信息
+            //   let completeMessage = data.message || "分析完成: 已生成评审建议";
               
-              // 处理 json_structure 字段 (如果complete消息中包含json_structure)
-              if (data.json_structure) {
-                console.log('🔄 complete消息中包含JSON结构:', data.json_structure);
+            //   // 处理 json_structure 字段 (如果complete消息中包含json_structure)
+            //   if (data.json_structure) {
+            //     console.log('🔄 complete消息中包含JSON结构:', data.json_structure);
                 
-                // 添加json_structure信息到完成消息，用于在日志中查看
-                try {
-                  // 创建一个可读的JSON格式
-                  let jsonDisplay = '';
+            //     // 添加json_structure信息到完成消息，用于在日志中查看
+            //     try {
+            //       // 创建一个可读的JSON格式
+            //       let jsonDisplay = '';
                   
-                  if (typeof data.json_structure === 'string') {
-                    // 尝试解析并格式化
-                    try {
-                      const parsedJson = JSON.parse(data.json_structure);
-                      jsonDisplay = JSON.stringify(parsedJson, null, 2);
-                    } catch (parseError) {
-                      // 如果无法解析，使用原始字符串
-                      jsonDisplay = data.json_structure;
-                    }
-                  } else {
-                    // 如果是对象，格式化为JSON字符串
-                    jsonDisplay = JSON.stringify(data.json_structure, null, 2);
-                  }
+            //       if (typeof data.json_structure === 'string') {
+            //         // 尝试解析并格式化
+            //         try {
+            //           const parsedJson = JSON.parse(data.json_structure);
+            //           jsonDisplay = JSON.stringify(parsedJson, null, 2);
+            //         } catch (parseError) {
+            //           // 如果无法解析，使用原始字符串
+            //           jsonDisplay = data.json_structure;
+            //         }
+            //       } else {
+            //         // 如果是对象，格式化为JSON字符串
+            //         jsonDisplay = JSON.stringify(data.json_structure, null, 2);
+            //       }
                   
-                  // 附加JSON信息到完成消息
-                  completeMessage += `\n\n已接收论文评审数据，可查看评审建议`;
-                } catch (jsonStringifyError) {
-                  console.error('❌ 处理JSON结构时出错:', jsonStringifyError);
-                  completeMessage += `\n\n数据接收完成，但处理过程中有错误`;
-                }
+            //       // 附加JSON信息到完成消息
+            //       completeMessage += `\n\n已接收论文评审数据，可查看评审建议`;
+            //     } catch (jsonStringifyError) {
+            //       console.error('❌ 处理JSON结构时出错:', jsonStringifyError);
+            //       completeMessage += `\n\n数据接收完成，但处理过程中有错误`;
+            //     }
                 
-                // 尝试将complete消息中的JSON结构也用于更新表单
-                try {
-                  let structureData = data.json_structure;
+            //     // 尝试将complete消息中的JSON结构也用于更新表单
+            //     try {
+            //       let structureData = data.json_structure;
                   
-                  if (typeof structureData === 'string') {
-                    try {
-                      structureData = JSON.parse(structureData);
-                    } catch (parseError) {
-                      console.error('❌ JSON字符串解析失败:', parseError);
+            //       if (typeof structureData === 'string') {
+            //         try {
+            //           structureData = JSON.parse(structureData);
+            //         } catch (parseError) {
+            //           console.error('❌ JSON字符串解析失败:', parseError);
                       
-                      // 尝试修复JSON格式问题
-                      try {
-                        let fixedJsonStr = structureData.replace(/'/g, '"');
-                        fixedJsonStr = fixedJsonStr.replace(/([{,])\s*([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
+            //           // 尝试修复JSON格式问题
+            //           try {
+            //             let fixedJsonStr = structureData.replace(/'/g, '"');
+            //             fixedJsonStr = fixedJsonStr.replace(/([{,])\s*([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
                         
-                        structureData = JSON.parse(fixedJsonStr);
-                        console.log('✅ 修复后解析成功:', structureData);
-                      } catch (fixError) {
-                        console.error('❌ 无法修复JSON格式:', fixError);
-                      }
-                    }
-                  }
+            //             structureData = JSON.parse(fixedJsonStr);
+            //             console.log('✅ 修复后解析成功:', structureData);
+            //           } catch (fixError) {
+            //             console.error('❌ 无法修复JSON格式:', fixError);
+            //           }
+            //         }
+            //       }
                   
-                  // 仅当是有效的对象时才更新
-                  if (structureData && typeof structureData === 'object') {
-                    const transformedData = transformApiJsonToFormData(structureData);
-                    updateFormData(transformedData, false);
-                  }
-                } catch (updateError) {
-                  console.error('❌ 更新表单失败:', updateError);
-                }
-              }
+            //       // 仅当是有效的对象时才更新
+            //       if (structureData && typeof structureData === 'object') {
+            //         const transformedData = transformApiJsonToFormData(structureData);
+            //         updateFormData(transformedData, false);
+            //       }
+            //     } catch (updateError) {
+            //       console.error('❌ 更新表单失败:', updateError);
+            //     }
+            //   }
               
-              // 记录完成日志
-              addAnalysisLog(completeMessage, "complete");
-              return;
+            //   // 记录完成日志
+            //   addAnalysisLog(completeMessage, "complete");
+            //   return;
               
             case 'error':
               // 处理错误

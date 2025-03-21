@@ -21,6 +21,7 @@ import EvaluationSectionItem from "./EvaluationSectionItem/EvaluationSectionItem
  * @param {number} props.progress - 分析进度百分比
  * @param {string} props.statusMessage - 状态消息
  * @param {Function} props.onApplyJsonStructure - 应用JSON结构的回调函数
+ * @param {string} props.jsonStructure - JSON结构数据 
  */
 export function EvaluationOptionsSection({
   evaluationSections,
@@ -33,7 +34,8 @@ export function EvaluationOptionsSection({
   analysisLogs,
   progress,
   statusMessage,
-  onApplyJsonStructure
+  onApplyJsonStructure,
+  jsonStructure
 }: EvaluationOptionsSectionProps) {
   
   return (
@@ -76,13 +78,14 @@ export function EvaluationOptionsSection({
           </div>
         </div>
         
-        <AnalysisLogPanel 
+        <AnalysisLogPanel
           analysisLogs={analysisLogs}
           isAnalyzing={isAnalyzing}
           pdfFile={pdfFile}
           progress={progress}
           statusMessage={statusMessage}
           onApplyJsonStructure={onApplyJsonStructure}
+          jsonStructure={jsonStructure}
         />
       </div>
     </div>

@@ -114,7 +114,7 @@ export function useAnalysisLogs() {
     );
   }, [addAnalysisLog, resetFormData, updateFormData, updateLogContent]);
   
-  // 更新 useEffect 以监听 reasoningText 和 finalContent 的变化
+  // 更新 useEffect 以监听 reasoningText 和 finalContent 还有jsonStructure的变化
   useEffect(() => {
     if (reasoningText) {
       updateLogContent('reasoning', reasoningText, false);
@@ -153,6 +153,10 @@ export function useAnalysisLogs() {
     formData,
     registerUpdateCallback,
     updateFormData,
-    resetFormData
+    resetFormData,
+    jsonStructure,
+    setJsonStructure,
+    reasoningText,
+    finalContent
   };
 } 

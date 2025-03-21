@@ -65,7 +65,11 @@ export default function ReviewForm({ data }: ReviewFormProps) {
     formData,
     registerUpdateCallback,
     updateFormData,
-    resetFormData
+    resetFormData,
+    jsonStructure,
+    setJsonStructure,
+    reasoningText,
+    finalContent
   } = useAnalysisLogs();
   
   // 保存当前使用的表单数据 (AI 分析后的数据或默认数据)
@@ -256,6 +260,33 @@ export default function ReviewForm({ data }: ReviewFormProps) {
     });
   };
   
+  // 处理应用JSON结构的回调函数
+  const handleApplyJsonStructure = useCallback((jsonStr: string) => {
+    try {
+      console.log('🔄 应用JSON结构:', jsonStr);
+      
+      // 尝试解析JSON字符串
+      let jsonData;
+      if (typeof jsonStr === 'string') {
+        jsonData = JSON.parse(jsonStr);
+      } else {
+        jsonData = jsonStr;
+      }
+      
+      // 使用updateFormData函数更新表单数据
+      updateFormData(jsonData, false);
+      
+      // 添加成功日志
+      addAnalysisLog('已成功应用AI填充数据', 'success');
+      
+      return true;
+    } catch (error) {
+      console.error('❌ 应用JSON结构失败:', error);
+      addAnalysisLog(`应用JSON结构失败: ${error instanceof Error ? error.message : '未知错误'}`, 'error');
+      return false;
+    }
+  }, [updateFormData, addAnalysisLog]);
+  
   // 确保显示的评估部分和文本评估部分非空
   const displayEvaluationSections: any = 
     currentFormData?.evaluationSections && currentFormData.evaluationSections.length > 0 
@@ -304,6 +335,8 @@ export default function ReviewForm({ data }: ReviewFormProps) {
             analysisLogs={analysisLogs}
             progress={progress}
             statusMessage={statusMessage}
+            onApplyJsonStructure={handleApplyJsonStructure}
+            jsonStructure={jsonStructure}
           />
           
           <TextualEvaluationSection 
