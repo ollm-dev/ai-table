@@ -407,7 +407,7 @@ export default function AnalysisLogPanel({
             
             悬浮操作按钮
             <div className="absolute top-2 right-2 flex gap-2">
-              {/* <button 
+              <button 
                 onClick={copyToClipboard}
                 className="p-1.5 bg-white rounded-md border border-gray-200 hover:bg-gray-50 transition-colors"
                 title="复制JSON"
@@ -425,7 +425,7 @@ export default function AnalysisLogPanel({
                     <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"></path>
                   </svg>
                 )}
-              </button> */}
+              </button>
             </div>
           </div>
           
