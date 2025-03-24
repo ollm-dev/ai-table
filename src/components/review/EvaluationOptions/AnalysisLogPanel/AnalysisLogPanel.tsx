@@ -3,6 +3,8 @@ import { UploadIcon } from "lucide-react";
 import Markdown from '@/components/markdown';
 import { AnalysisLogPanelProps } from "@/types/review/EvaluationOptions/EvaluationOptionsSection";
 import { useState, useRef, useMemo, useEffect, useCallback } from "react";
+import { AIProcessFlow } from '../AIProcessFlow/AIProcessFlow';
+
 export default function AnalysisLogPanel({ 
     analysisLogs, 
     isAnalyzing, 
@@ -24,6 +26,26 @@ export default function AnalysisLogPanel({
     const isHandlingScrollRef = useRef(false);
     // 默认不进行初始滚动，组件初始加载时不会自动滚动到底部
     const needsInitialScrollRef = useRef(false);
+  
+    // 定义标签选项
+    const tabOptions = [
+      { 
+        value: 'reasoning' as const, 
+        label: '推理过程', 
+        icon: '🤔' 
+      },
+      { 
+        value: 'content' as const, 
+        label: '评审结果', 
+        icon: '📝' 
+      },
+      { 
+        value: 'json_structure' as const, 
+        label: 'AI填充', 
+        icon: '🔍',
+        badge: !!jsonStructure
+      }
+    ];
   
     // 处理滚动事件
     const handleScroll = useCallback(() => {
@@ -475,6 +497,7 @@ export default function AnalysisLogPanel({
           
             <div className="absolute top-2 right-2 flex gap-2">
               <button 
+                type="button"
                 onClick={copyToClipboard}
                 className="p-1.5 bg-white rounded-md border border-gray-200 hover:bg-gray-50 transition-colors"
                 title="复制JSON"
@@ -496,8 +519,8 @@ export default function AnalysisLogPanel({
             </div>
           </div>
           
-          {/* 底部按钮区域 */}
-          <div className="flex justify-between items-center">
+         
+          {/* <div className="flex justify-between items-center">
             {showFillSuccess ? (
               <div className="px-6 py-2 bg-green-100 text-green-800 rounded-xl border border-green-200 shadow-md flex items-center mr-auto ml-auto">
                 <span className="mr-2">✓</span>
@@ -505,6 +528,7 @@ export default function AnalysisLogPanel({
               </div>
             ) : (
               <button
+                type="button"
                 onClick={handleApplyJson}
                 disabled={!jsonStructure || isAnalyzing}
                 className={`flex items-center justify-center px-4 py-2 rounded-xl transition-all duration-300 border ${
@@ -521,7 +545,7 @@ export default function AnalysisLogPanel({
                 <span className="font-medium">应用AI填充</span>
               </button>
             )}
-          </div>
+          </div> */}
         </div>
       );
     };
@@ -545,202 +569,190 @@ export default function AnalysisLogPanel({
             </h4>
             
             {/* 标签切换按钮 */}
-            <div className="flex mb-4 gap-2 justify-center">
-              <button
-                type="button"
-                onClick={() => setActiveTab('reasoning')}
-                className={`px-4 py-2 rounded-xl transition-all duration-300 border ${
-                  activeTab === 'reasoning' 
-                    ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg border-primary-600' 
-                    : 'bg-white text-gray-700 border-gray-200 hover:border-primary-200 hover:bg-primary-50/10'
-                }`}
-              >
-                <span className="font-medium">推理过程</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('content')}
-                className={`px-4 py-2 rounded-xl transition-all duration-300 border ${
-                  activeTab === 'content' 
-                    ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg border-primary-600' 
-                    : 'bg-white text-gray-700 border-gray-200 hover:border-primary-200 hover:bg-primary-50/10'
-                }`}
-              >
-                <span className="font-medium">评审结果</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveTab('json_structure')}
-                className={`px-4 py-2 rounded-xl transition-all duration-300 border ${
-                  activeTab === 'json_structure' 
-                    ? 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-lg border-primary-600' 
-                    : 'bg-white text-gray-700 border-gray-200 hover:border-primary-200 hover:bg-primary-50/10'
-                } ${jsonStructure ? 'relative' : ''}`}
-              >
-                <span className="font-medium">AI填充</span>
-                {jsonStructure && (
-                  <span className="absolute -top-1 -right-1 h-3 w-3 bg-green-500 rounded-full"></span>
-                )}
-              </button>
-            </div>
-          </div>
-          
-          {/* 添加进度条 */}
-          {isAnalyzing && progress > 0 && (
-            <div className="mb-3">
-              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden shadow-inner">
-                <div 
-                  className={`bg-gradient-to-r from-primary-500 via-purple-500 to-primary-600 h-2 rounded-full 
-                              transition-all duration-500 ease-out ${progress < 100 ? 'animate-pulse-slow' : ''}`}
-                  style={{ 
-                    width: `${progress}%`, 
-                    boxShadow: 'inset 0 0 5px rgba(255, 255, 255, 0.5)' 
-                  }}
+            <div className="flex justify-between mb-3">
+              <div className="flex space-x-1">
+                {tabOptions.map((option) => (
+                  <button
+                    type="button"
+                    key={option.value}
+                    onClick={() => setActiveTab(option.value)}
+                    className={`px-3 py-1.5 text-sm rounded-md transition-all duration-300 ${
+                      activeTab === option.value
+                        ? 'bg-primary-100 text-primary-700 font-medium shadow-sm'
+                        : 'text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    {option.icon} {option.label}
+                  </button>
+                ))}
+              </div>
+              
+              {jsonStructure && activeTab === 'json_structure' && (
+                <button
+                  type="button"
+                  onClick={() => onApplyJsonStructure(jsonStructure)}
+                  className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors flex items-center"
                 >
-                  {/* 进度条活动指示器 */}
-                  {progress < 100 && progress > 5 && (
-                    <div className="h-full w-[10%] absolute right-0 top-0 bg-white opacity-30 animate-shimmer-fast"
-                         style={{ transform: 'skewX(-15deg)' }}></div>
-                  )}
-                </div>
-              </div>
-              <div className="flex justify-between items-center mt-1">
-                <div className="text-xs text-gray-400">{Math.floor(progress)}%</div>
-                <p className="text-xs text-gray-500 text-center flex-1">{statusMessage}</p>
-                <div className="text-xs text-gray-400 flex items-center">
-                  <span className={`mr-1 inline-block h-1.5 w-1.5 rounded-full ${progress < 100 ? 'bg-primary-400 animate-pulse' : 'bg-green-500'}`}></span>
-                  <span>{progress < 100 ? '处理中' : '完成'}</span>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {/* 分析日志区域 */}
-          <div className="relative">
-            <div 
-              id="log-container"
-              ref={logContainerRef}
-              className="flex-1 bg-white p-5 rounded-xl text-sm shadow-inner border border-gray-200 stable-height-container" 
-              style={{ 
-                height: activeTab === 'json_structure' ? '500px' : '480px', // 为 JSON 标签页提供足够空间
-                overflowY: 'auto',
-                overscrollBehavior: 'contain',
-                scrollbarWidth: 'thin',
-                scrollbarColor: '#cbd5e0 #f7fafc',
-                position: 'relative',
-                fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-                // 性能优化属性
-                containIntrinsicSize: '0 480px',
-                willChange: 'transform',
-                transform: 'translateZ(0)',
-                backfaceVisibility: 'hidden',
-                // 新增：初始滚动位置在底部
-                scrollBehavior: 'smooth'
-              }}
-            >
-              {analysisLogs.length === 0 ? (
-                <div className="text-center text-gray-600 py-10 flex flex-col items-center justify-center h-full">
-                  {pdfFile ? (
-                    <>
-                      <div className="animate-spin h-10 w-10 border-3 border-primary-500 border-t-transparent rounded-full mb-4"></div>
-                      <p className="font-medium">准备开始分析...</p>
-                    </>
-                  ) : (
-                    <>
-                      <div className="relative bg-gradient-to-br from-gray-100 to-gray-200 p-8 rounded-lg border border-dashed border-gray-300 w-40 h-40 flex items-center justify-center shadow-inner">
-                        <UploadIcon className="h-14 w-14 text-primary-500 animate-bounce-subtle" />
-                        <div className="absolute -top-2 -right-2">
-                          <span className="inline-flex h-8 w-8 rounded-full bg-primary-100 items-center justify-center border border-primary-200">
-                            <span className="text-primary-500 text-lg">?</span>
-                          </span>
-                        </div>
-                      </div>
-                      <p className="mt-4 font-medium text-gray-700">请先上传PDF文件开始分析</p>
-                      <p className="mt-1 text-xs text-gray-500">支持10MB以内的PDF文件</p>
-                    </>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-3 terminal-text text-sm h-full content-stable">
-                  {activeTab === 'json_structure' ? (
-                    <div className="stable-display-layer">
-                      <JsonTabContent />
-                    </div>
-                  ) : (
-                    filteredLogs.length > 0 ? (
-                      <div className="stable-display-layer">
-                        <LogRenderer filteredLogs={filteredLogs} />
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center h-full">
-                        <div className="text-center">
-                          <div className="flex justify-center mb-4">
-                            <div className="relative">
-                              <div className="animate-ping absolute h-8 w-8 rounded-full bg-primary-200 opacity-75"></div>
-                              <div className="relative rounded-full h-8 w-8 bg-primary-500 flex items-center justify-center">
-                                <span className="text-white text-lg">⋯</span>
-                              </div>
-                            </div>
-                          </div>
-                          <p className="text-gray-600">
-                            {activeTab === 'reasoning' ? '暂无推理过程' : '暂无评审结果'}
-                            {isAnalyzing && '，正在生成中...'}
-                          </p>
-                        </div>
-                      </div>
-                    )
-                  )}
-                </div>
+                  <span className="mr-1">✓</span> 应用JSON结构
+                </button>
               )}
             </div>
             
-            {/* 滚动控制按钮 - 专用于AI填充标签页 */}
-            {activeTab === 'json_structure' && !autoScroll && jsonStructure && (
-              <button
-                onClick={scrollToBottom}
-                className="absolute bottom-4 right-4 bg-white bg-opacity-90 p-2.5 rounded-full shadow-md hover:shadow-lg border border-gray-200 transition-all duration-300 hover:bg-primary-50 z-10"
-                aria-label="滚动到底部"
-              >
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  width="20" 
-                  height="20" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  className="text-primary-500"
-                >
-                  <path d="M12 5v14M5 12l7 7 7-7"/>
-                </svg>
-              </button>
+            {/* AI分析流程组件 - 在进度条上方显示 */}
+            {isAnalyzing && (
+              <div className="mb-3">
+                <AIProcessFlow progress={progress} />
+              </div>
             )}
+            
+            {/* 进度条 */}
+            {isAnalyzing && progress > 0 && (
+              <div className="mb-3">
+                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden shadow-inner">
+                  <div 
+                    className={`bg-gradient-to-r from-primary-500 via-purple-500 to-primary-600 h-2 rounded-full 
+                                transition-all duration-500 ease-out ${progress < 100 ? 'animate-pulse-slow' : ''}`}
+                    style={{ 
+                      width: `${progress}%`, 
+                      boxShadow: 'inset 0 0 5px rgba(255, 255, 255, 0.5)' 
+                    }}
+                  >
+                    {/* 进度条活动指示器 */}
+                    {progress < 100 && progress > 5 && (
+                      <div className="h-full w-[10%] absolute right-0 top-0 bg-white opacity-30 animate-shimmer-fast"
+                           style={{ transform: 'skewX(-15deg)' }}></div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex justify-between items-center mt-1">
+                  <div className="text-xs text-gray-400">{Math.floor(progress)}%</div>
+                  <p className="text-xs text-gray-500 text-center flex-1">{statusMessage}</p>
+                  <div className="text-xs text-gray-400 flex items-center">
+                    <span className={`mr-1 inline-block h-1.5 w-1.5 rounded-full ${progress < 100 ? 'bg-primary-400 animate-pulse' : 'bg-green-500'}`}></span>
+                    <span>{progress < 100 ? '处理中' : '完成'}</span>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* 分析日志区域 */}
+            <div className="relative">
+              <div 
+                id="log-container"
+                ref={logContainerRef}
+                className="flex-1 bg-white p-5 rounded-xl text-sm shadow-inner border border-gray-200 stable-height-container" 
+                style={{ 
+                  height: activeTab === 'json_structure' ? '500px' : '480px', // 为 JSON 标签页提供足够空间
+                  overflowY: 'auto',
+                  overscrollBehavior: 'contain',
+                  scrollbarWidth: 'thin',
+                  scrollbarColor: '#cbd5e0 #f7fafc',
+                  position: 'relative',
+                  fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
+                  // 性能优化属性
+                  containIntrinsicSize: '0 480px',
+                  willChange: 'transform',
+                  transform: 'translateZ(0)',
+                  backfaceVisibility: 'hidden',
+                  // 新增：初始滚动位置在底部
+                  scrollBehavior: 'smooth'
+                }}
+              >
+                {analysisLogs.length === 0 ? (
+                  <div className="text-center text-gray-600 py-10 flex flex-col items-center justify-center h-full">
+                    {pdfFile ? (
+                      <>
+                        <div className="animate-spin h-10 w-10 border-3 border-primary-500 border-t-transparent rounded-full mb-4"></div>
+                        <p className="font-medium">准备开始分析...</p>
+                      </>
+                    ) : (
+                      <>
+                        <div className="relative bg-gradient-to-br from-gray-100 to-gray-200 p-8 rounded-lg border border-dashed border-gray-300 w-40 h-40 flex items-center justify-center shadow-inner">
+                          <UploadIcon className="h-14 w-14 text-primary-500 animate-bounce-subtle" />
+                          <div className="absolute -top-2 -right-2">
+                            <span className="inline-flex h-8 w-8 rounded-full bg-primary-100 items-center justify-center border border-primary-200">
+                              <span className="text-primary-500 text-lg">?</span>
+                            </span>
+                          </div>
+                        </div>
+                        <p className="mt-4 font-medium text-gray-700">请先上传PDF文件开始分析</p>
+                        <p className="mt-1 text-xs text-gray-500">支持10MB以内的PDF文件</p>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  <div className="space-y-3 terminal-text text-sm h-full content-stable">
+                    {activeTab === 'json_structure' ? (
+                      <div className="stable-display-layer">
+                        <JsonTabContent />
+                      </div>
+                    ) : (
+                      filteredLogs.length > 0 ? (
+                        <div className="stable-display-layer">
+                          <LogRenderer filteredLogs={filteredLogs} />
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center h-full">
+                          <div className="text-center">
+                            <div className="flex justify-center mb-4">
+                              <div className="relative">
+                                <div className="animate-ping absolute h-8 w-8 rounded-full bg-primary-200 opacity-75"></div>
+                                <div className="relative rounded-full h-8 w-8 bg-primary-500 flex items-center justify-center">
+                                  <span className="text-white text-lg">⋯</span>
+                                </div>
+                              </div>
+                            </div>
+                            <p className="text-gray-600">
+                              {activeTab === 'reasoning' ? '暂无推理过程' : '暂无评审结果'}
+                              {isAnalyzing && '，正在生成中...'}
+                            </p>
+                          </div>
+                        </div>
+                      )
+                    )}
+                  </div>
+                )}
+              </div>
+              
+              {/* 滚动控制按钮 - 专用于AI填充标签页 */}
+              {activeTab === 'json_structure' && (
+                <div className="absolute bottom-5 right-5 z-20 flex space-x-2">
+                  <button
+                    type="button"
+                    onClick={scrollToBottom}
+                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 rounded-full transition-colors shadow-md"
+                    aria-label="滚动到底部"
+                  >
+                    <span>▼</span>
+                  </button>
+                </div>
+              )}
 
-            {/* 滚动控制按钮 - 不再区分标签页，统一逻辑 */}
-            {!autoScroll && activeTab !== 'json_structure' && (
-              <button
-                onClick={scrollToBottom}
-                className="absolute bottom-4 right-4 bg-white bg-opacity-90 p-2.5 rounded-full shadow-md hover:shadow-lg border border-gray-200 transition-all duration-300 hover:bg-primary-50 z-10"
-                aria-label="滚动到底部"
-              >
-                <svg 
-                  xmlns="http://www.w3.org/2000/svg" 
-                  width="20" 
-                  height="20" 
-                  viewBox="0 0 24 24" 
-                  fill="none" 
-                  stroke="currentColor" 
-                  strokeWidth="2" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  className="text-primary-500"
+              {/* 滚动控制按钮 - 不再区分标签页，统一逻辑 */}
+              {!autoScroll && activeTab !== 'json_structure' && (
+                <button
+                  type="button"
+                  onClick={scrollToBottom}
+                  className="absolute bottom-4 right-4 bg-white bg-opacity-90 p-2.5 rounded-full shadow-md hover:shadow-lg border border-gray-200 transition-all duration-300 hover:bg-primary-50 z-10"
+                  aria-label="滚动到底部"
                 >
-                  <path d="M12 5v14M5 12l7 7 7-7"/>
-                </svg>
-              </button>
-            )}
+                  <svg 
+                    xmlns="http://www.w3.org/2000/svg" 
+                    width="20" 
+                    height="20" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round" 
+                    className="text-primary-500"
+                  >
+                    <path d="M12 5v14M5 12l7 7 7-7"/>
+                  </svg>
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>

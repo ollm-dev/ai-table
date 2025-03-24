@@ -5,6 +5,8 @@
 import { getReviewUrl } from '../../lib/config';
 import { ReviewRequestParams } from './types';
 import { sanitizeHtml, transformApiJsonToFormData } from './utils';
+// 导入模拟分析过程函数
+import { simulateAnalysisProcess } from './mockAnalysis';
 
 /**
  * 处理API响应流
@@ -455,6 +457,7 @@ export const processStream = async (
  * @param addAnalysisLog 添加分析日志函数
  * @param updateLogContent 更新日志内容函数
  * @param updateFormData 更新表单数据函数
+ * @param useMockData 是否使用模拟数据
  * @returns 处理结果布尔值
  */
 export const startAnalysisWithBackend = async (
@@ -471,7 +474,8 @@ export const startAnalysisWithBackend = async (
   resetFormData: () => void,
   addAnalysisLog: (content: string, type?: string) => void,
   updateLogContent: (type: string, content: string, append?: boolean) => void,
-  updateFormData: (jsonStructure: any, isPartial?: boolean) => void
+  updateFormData: (jsonStructure: any, isPartial?: boolean) => void,
+  useMockData: boolean = false
 ) => {
   try {
     // 重置所有状态
@@ -490,6 +494,31 @@ export const startAnalysisWithBackend = async (
     
     // 添加初始化日志
     addAnalysisLog("开始分析文档...", "init");
+    
+    // 判断是否使用模拟数据
+    // 仅在明确指定使用模拟数据时才使用模拟数据
+    if (useMockData) {
+      console.log('🔧 使用模拟数据进行AI分析...');
+      
+      // 等待一小段时间，模拟初始加载
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // 停止等待响应标志
+      setIsWaitingForResponse(false);
+      
+      // 运行模拟分析过程
+      await simulateAnalysisProcess(
+        addAnalysisLog,
+        setProgress,
+        setStatusMessage,
+        updateLogContent,
+        setReasoningText,
+        setFinalContent,
+        setJsonStructure
+      );
+      
+      return true;
+    }
     
     const reviewData: ReviewRequestParams = {
       file_path: filePath,

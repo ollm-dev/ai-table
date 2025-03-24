@@ -212,7 +212,9 @@ export default function ReviewForm({ data }: ReviewFormProps) {
   } = useFileUpload(
     // 分析开始回调
     async (filePath) => {
-      const success = await startAnalysisWithBackend(filePath);
+      // 强制使用真实API，不使用模拟数据
+      const useMockData = false; // 修改为false，强制使用真实API
+      const success = await startAnalysisWithBackend(filePath, useMockData);
       if (success) {
         setAiRecommendationsAvailable(true);
         setShowEvaluationAI(true);

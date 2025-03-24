@@ -95,7 +95,7 @@ export function useAnalysisLogs() {
   }, [addAnalysisLog]);
   
   // 开始分析
-  const startAnalysisWithBackend = useCallback(async (filePath: string) => {
+  const startAnalysisWithBackend = useCallback(async (filePath: string, useMockData: boolean = false) => {
     return startAnalysisWithBackendImpl(
       filePath,
       setIsAnalyzing,
@@ -110,7 +110,8 @@ export function useAnalysisLogs() {
       resetFormData,
       addAnalysisLog,
       updateLogContent,
-      updateFormData
+      updateFormData,
+      useMockData
     );
   }, [addAnalysisLog, resetFormData, updateFormData, updateLogContent]);
   
@@ -144,6 +145,7 @@ export function useAnalysisLogs() {
   return {
     analysisLogs,
     isAnalyzing,
+    isWaitingForResponse,
     addAnalysisLog,
     startAnalysisWithBackend,
     setAnalysisLogs,
