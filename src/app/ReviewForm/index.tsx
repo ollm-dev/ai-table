@@ -268,9 +268,52 @@ export default function ReviewForm({ data }: ReviewFormProps) {
       // 尝试解析JSON字符串
       let jsonData;
       if (typeof jsonStr === 'string') {
-        jsonData = JSON.parse(jsonStr);
+        try {
+          jsonData = JSON.parse(jsonStr);
+        } catch (parseError) {
+          console.error('❌ JSON解析失败，尝试修复:', parseError);
+          
+          // 尝试修复JSON格式问题
+          try {
+            // 1. 替换单引号为双引号
+            let fixedJsonStr = jsonStr.replace(/'/g, '"');
+            
+            // 2. 处理没有引号的属性名
+            fixedJsonStr = fixedJsonStr.replace(/([{,])\s*([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
+            
+            // 3. 处理尾部多余的逗号
+            fixedJsonStr = fixedJsonStr.replace(/,\s*([}\]])/g, '$1');
+            
+            jsonData = JSON.parse(fixedJsonStr);
+            console.log('✅ 修复后成功解析JSON');
+            addAnalysisLog('JSON格式已自动修复', 'success');
+          } catch (fixError) {
+            console.error('❌ 修复JSON失败:', fixError);
+            
+            // 尝试从字符串中提取有效的JSON对象
+            const objectMatch = jsonStr.match(/{[^]*?}/);
+            if (objectMatch && objectMatch[0]) {
+              try {
+                const extractedObject = objectMatch[0];
+                jsonData = JSON.parse(extractedObject);
+                console.log('✅ 提取JSON对象成功');
+                addAnalysisLog('从不完整数据中提取JSON成功', 'success');
+              } catch (extractError) {
+                console.error('❌ 提取JSON对象失败:', extractError);
+                throw new Error("无法解析JSON数据");
+              }
+            } else {
+              throw new Error("无法识别有效的JSON数据");
+            }
+          }
+        }
       } else {
         jsonData = jsonStr;
+      }
+      
+      // 确保数据为对象
+      if (!jsonData || typeof jsonData !== 'object') {
+        throw new Error("无效的JSON数据结构");
       }
       
       // 使用updateFormData函数更新表单数据

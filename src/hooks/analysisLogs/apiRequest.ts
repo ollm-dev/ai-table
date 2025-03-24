@@ -115,20 +115,6 @@ export const processStream = async (
                   // 使用函数更新方式确保拿到最新的文本内容
                   updateLogContent('json_structure', newJsonStructure, false);
                   
-                  // 尝试解析和更新表单数据（如果是有效的JSON）
-                  // 注释掉自动更新表单数据的代码，等待用户手动点击"应用AI填充"按钮
-                  /* 
-                  try {
-                    if (sanitizedJson.trim().startsWith('{') && sanitizedJson.trim().endsWith('}')) {
-                      let jsonData = JSON.parse(sanitizedJson);
-                      // 使用部分更新模式，因为这是流式传输的一部分
-                      updateFormData(jsonData, true);
-                    }
-                  } catch (jsonError) {
-                    console.log('⚠️ 部分JSON结构不是有效的JSON对象:', jsonError);
-                    // 这是正常的，因为流式数据可能不是完整的JSON
-                  }
-                  */
                   
                   return newJsonStructure;
                 });
@@ -150,20 +136,96 @@ export const processStream = async (
                     } catch (parseError) {
                       console.error('❌ JSON完整结构解析失败:', parseError);
                       
-                      // 尝试修复可能的JSON格式问题
+                      // 增强的JSON修复逻辑
                       try {
-                        // 替换单引号为双引号
+                        // 1. 替换单引号为双引号
                         let fixedJsonStr = completeStructure.replace(/'/g, '"');
-                        // 处理没有引号的属性名
+                        
+                        // 2. 处理没有引号的属性名
                         fixedJsonStr = fixedJsonStr.replace(/([{,])\s*([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
                         
-                        completeStructure = JSON.parse(fixedJsonStr);
-                        console.log('✅ 修复后解析成功:', completeStructure);
+                        // 3. 处理尾部多余的逗号
+                        fixedJsonStr = fixedJsonStr.replace(/,\s*([}\]])/g, '$1');
+                        
+                        // 4. 处理字符串中的换行符
+                        fixedJsonStr = fixedJsonStr.replace(/(["])([^"]*?)[\n\r]+([^"]*?)(["])/g, '$1$2 $3$4');
+                        
+                        // 5. 尝试修复未闭合的引号和括号
+                        const quotes = (fixedJsonStr.match(/"/g) || []).length;
+                        if (quotes % 2 !== 0) {
+                          console.warn('⚠️ 检测到未闭合的引号，尝试修复');
+                          // 在字符串末尾添加引号
+                          const lastQuoteIndex = fixedJsonStr.lastIndexOf('"');
+                          if (lastQuoteIndex !== -1) {
+                            fixedJsonStr += '"';
+                          }
+                        }
+                        
+                        const openBraces = (fixedJsonStr.match(/{/g) || []).length;
+                        const closeBraces = (fixedJsonStr.match(/}/g) || []).length;
+                        if (openBraces > closeBraces) {
+                          console.warn(`⚠️ 检测到未闭合的大括号，尝试修复`);
+                          // 在字符串末尾添加缺少的大括号
+                          for (let i = 0; i < openBraces - closeBraces; i++) {
+                            fixedJsonStr += '}';
+                          }
+                        }
+                        
+                        const openBrackets = (fixedJsonStr.match(/\[/g) || []).length;
+                        const closeBrackets = (fixedJsonStr.match(/\]/g) || []).length;
+                        if (openBrackets > closeBrackets) {
+                          console.warn(`⚠️ 检测到未闭合的方括号，尝试修复`);
+                          // 在字符串末尾添加缺少的方括号
+                          for (let i = 0; i < openBrackets - closeBrackets; i++) {
+                            fixedJsonStr += ']';
+                          }
+                        }
+                        
+                        try {
+                          completeStructure = JSON.parse(fixedJsonStr);
+                          console.log('✅ 修复后解析成功:', completeStructure);
+                          addAnalysisLog(`JSON完整结构格式已自动修复`, "success");
+                        } catch (innerParseError) {
+                          // 如果第一次修复失败，尝试更激进的修复方法
+                          console.error('❌ 第一次修复失败，尝试更激进的修复:', innerParseError);
+                          
+                          // 尝试提取最外层的JSON对象
+                          const objectMatch = fixedJsonStr.match(/{[^]*?}/);
+                          if (objectMatch && objectMatch[0]) {
+                            const extractedObject = objectMatch[0];
+                            completeStructure = JSON.parse(extractedObject);
+                            console.log('✅ 从字符串中提取JSON对象成功');
+                            addAnalysisLog(`从损坏的JSON中提取有效数据成功`, "success");
+                          } else {
+                            throw new Error("无法从损坏的JSON中提取有效数据");
+                          }
+                        }
                       } catch (fixError) {
-                        console.error('❌ 无法修复和解析JSON完整结构:', fixError);
-                        // 添加错误日志
-                        addAnalysisLog(`无法解析JSON完整结构: ${fixError instanceof Error ? fixError.message : '未知错误'}`, "error");
-                        break; // 无法解析，退出处理
+                        console.error('❌ 所有修复尝试失败，尝试继续处理:', fixError);
+                        addAnalysisLog(`JSON修复失败: ${fixError instanceof Error ? fixError.message : '未知错误'}`, "error");
+                        
+                        // 尝试从原始字符串中提取有意义的部分字段
+                        try {
+                          // 创建一个空对象
+                          completeStructure = {};
+                          
+                          // 尝试提取可能的评分数值
+                          const scoreMatches = completeStructure.match(/["']?(\w+)["']?\s*:\s*(\d+)/g);
+                          if (scoreMatches) {
+                            scoreMatches.forEach((match: string) => {
+                              const [key, value] = match.split(':').map((s: string) => s.trim().replace(/["']/g, ''));
+                              if (key && value) {
+                                // @ts-ignore
+                                completeStructure[key] = parseInt(value, 10);
+                              }
+                            });
+                          }
+                          
+                          console.log('⚠️ 尝试从原始字符串提取部分数据:', completeStructure);
+                          addAnalysisLog(`尝试部分恢复数据`, "warning");
+                        } catch (extractError) {
+                          console.error('❌ 数据提取失败:', extractError);
+                        }
                       }
                     }
                   }
@@ -176,13 +238,16 @@ export const processStream = async (
                     const transformedData = transformApiJsonToFormData(completeStructure);
                     
                     // 使用非部分更新模式，确保完整更新
-                    // updateFormData(transformedData, false);
+                    updateFormData(transformedData, false);
                     
                     // 添加成功处理的日志
                     addAnalysisLog(`成功更新表单数据结构`, "success");
                   } else {
                     console.warn('⚠️ 完整JSON结构格式不符合预期:', completeStructure);
-                    addAnalysisLog(`JSON结构格式不符合预期`, "warning");
+                    addAnalysisLog(`JSON结构格式不符合预期，尝试部分应用`, "warning");
+                    
+                    // 尝试将其作为原始对象直接应用
+                    updateFormData(completeStructure, false);
                   }
                 } catch (completeStructureError) {
                   console.error('❌ 处理完整JSON结构时出错:', completeStructureError);
@@ -190,81 +255,6 @@ export const processStream = async (
                 }
               }
               break;
-              
-            // case 'complete':
-            //   // 处理完成事件 - 确保数据也同步处理完成
-            //   console.log('✨ 分析完成');
-            //   setStatusMessage(data.message || '分析完成');
-              
-            //   // 自定义完成消息，包含json_structure信息
-            //   let completeMessage = data.message || "分析完成: 已生成评审建议";
-              
-            //   // 处理 json_structure 字段 (如果complete消息中包含json_structure)
-            //   if (data.json_structure) {
-            //     console.log('🔄 complete消息中包含JSON结构:', data.json_structure);
-                
-            //     // 添加json_structure信息到完成消息，用于在日志中查看
-            //     try {
-            //       // 创建一个可读的JSON格式
-            //       let jsonDisplay = '';
-                  
-            //       if (typeof data.json_structure === 'string') {
-            //         // 尝试解析并格式化
-            //         try {
-            //           const parsedJson = JSON.parse(data.json_structure);
-            //           jsonDisplay = JSON.stringify(parsedJson, null, 2);
-            //         } catch (parseError) {
-            //           // 如果无法解析，使用原始字符串
-            //           jsonDisplay = data.json_structure;
-            //         }
-            //       } else {
-            //         // 如果是对象，格式化为JSON字符串
-            //         jsonDisplay = JSON.stringify(data.json_structure, null, 2);
-            //       }
-                  
-            //       // 附加JSON信息到完成消息
-            //       completeMessage += `\n\n已接收论文评审数据，可查看评审建议`;
-            //     } catch (jsonStringifyError) {
-            //       console.error('❌ 处理JSON结构时出错:', jsonStringifyError);
-            //       completeMessage += `\n\n数据接收完成，但处理过程中有错误`;
-            //     }
-                
-            //     // 尝试将complete消息中的JSON结构也用于更新表单
-            //     try {
-            //       let structureData = data.json_structure;
-                  
-            //       if (typeof structureData === 'string') {
-            //         try {
-            //           structureData = JSON.parse(structureData);
-            //         } catch (parseError) {
-            //           console.error('❌ JSON字符串解析失败:', parseError);
-                      
-            //           // 尝试修复JSON格式问题
-            //           try {
-            //             let fixedJsonStr = structureData.replace(/'/g, '"');
-            //             fixedJsonStr = fixedJsonStr.replace(/([{,])\s*([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
-                        
-            //             structureData = JSON.parse(fixedJsonStr);
-            //             console.log('✅ 修复后解析成功:', structureData);
-            //           } catch (fixError) {
-            //             console.error('❌ 无法修复JSON格式:', fixError);
-            //           }
-            //         }
-            //       }
-                  
-            //       // 仅当是有效的对象时才更新
-            //       if (structureData && typeof structureData === 'object') {
-            //         const transformedData = transformApiJsonToFormData(structureData);
-            //         updateFormData(transformedData, false);
-            //       }
-            //     } catch (updateError) {
-            //       console.error('❌ 更新表单失败:', updateError);
-            //     }
-            //   }
-              
-            //   // 记录完成日志
-            //   addAnalysisLog(completeMessage, "complete");
-            //   return;
               
             case 'error':
               // 处理错误
@@ -280,6 +270,11 @@ export const processStream = async (
               if (data.formTitle || data.projectInfo || data.evaluationSections || data.textualEvaluations) {
                 console.log('🔍 检测到有效表单数据结构，尝试更新');
                 updateFormData(data, false);
+              } else if (typeof data === 'object' && Object.keys(data).length > 0) {
+                // 如果是含有数据的对象，即使不符合预期格式也尝试应用
+                console.log('🔍 检测到非标准JSON对象，尝试作为有效数据应用');
+                updateFormData(data, false);
+                addAnalysisLog(`应用了非标准格式的数据`, "warning");
               } else {
                 addAnalysisLog(`收到未知类型消息: ${JSON.stringify(data)}`, "unknown");
               }
@@ -292,17 +287,58 @@ export const processStream = async (
           
           // 尝试解析原始消息中的 JSON 结构
           try {
-            const startIndex = message.indexOf('{');
-            const endIndex = message.lastIndexOf('}');
-            if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
-              const jsonStr = message.substring(startIndex, endIndex + 1);
-              console.log('🔍 尝试从错误消息中提取 JSON:', jsonStr);
-              const extractedData = JSON.parse(jsonStr);
-              // 检查提取的数据是否有效
-              if (extractedData.formTitle || extractedData.projectInfo || 
-                  extractedData.evaluationSections || extractedData.textualEvaluations) {
-                console.log('🔄 提取成功，尝试更新表单数据');
-                updateFormData(extractedData, false);
+            // 寻找任何可能的JSON对象
+            const jsonMatches = message.match(/{[^}]*}/g);
+            if (jsonMatches && jsonMatches.length > 0) {
+              // 尝试解析找到的每个JSON对象
+              for (const jsonStr of jsonMatches) {
+                try {
+                  console.log('🔍 尝试从错误消息中提取 JSON:', jsonStr);
+                  const extractedData = JSON.parse(jsonStr);
+                  
+                  // 检查提取的数据是否有效
+                  if (extractedData && typeof extractedData === 'object' && Object.keys(extractedData).length > 0) {
+                    console.log('🔄 提取成功，尝试更新表单数据');
+                    updateFormData(extractedData, false);
+                    addAnalysisLog(`从错误消息中成功提取数据`, "success");
+                    break; // 一旦找到有效数据就退出循环
+                  }
+                } catch (jsonParseError) {
+                  console.warn('⚠️ 无法解析此JSON片段:', jsonParseError);
+                  // 继续尝试下一个匹配项
+                }
+              }
+            } else {
+              // 如果没有找到JSON对象，尝试更宽松的方法
+              const startIndex = message.indexOf('{');
+              const endIndex = message.lastIndexOf('}');
+              if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
+                const jsonStr = message.substring(startIndex, endIndex + 1);
+                console.log('🔍 尝试从错误消息中提取 JSON:', jsonStr);
+                
+                try {
+                  const extractedData = JSON.parse(jsonStr);
+                  // 检查提取的数据是否有效
+                  if (extractedData && typeof extractedData === 'object' && Object.keys(extractedData).length > 0) {
+                    console.log('🔄 提取成功，尝试更新表单数据');
+                    updateFormData(extractedData, false);
+                    addAnalysisLog(`从错误消息中成功提取数据`, "success");
+                  }
+                } catch (jsonParseError) {
+                  // 尝试修复可能的JSON错误
+                  try {
+                    let fixedJsonStr = jsonStr.replace(/'/g, '"')
+                      .replace(/([{,])\s*([a-zA-Z0-9_]+)\s*:/g, '$1"$2":')
+                      .replace(/,\s*([}\]])/g, '$1');
+                    
+                    const extractedData = JSON.parse(fixedJsonStr);
+                    console.log('🔄 修复后解析成功，尝试更新表单数据');
+                    updateFormData(extractedData, false);
+                    addAnalysisLog(`成功修复并提取错误消息中的数据`, "success");
+                  } catch (fixError) {
+                    console.error('❌ 无法从错误消息中提取有效JSON:', fixError);
+                  }
+                }
               }
             }
           } catch (extractError) {
@@ -316,24 +352,70 @@ export const processStream = async (
         
         // 尝试从非SSE消息中提取 JSON 结构
         try {
-          const startIndex = message.indexOf('{');
-          const endIndex = message.lastIndexOf('}');
-          if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
-            const jsonStr = message.substring(startIndex, endIndex + 1);
-            console.log('🔍 尝试从非SSE消息中提取 JSON:', jsonStr);
-            const extractedData = JSON.parse(jsonStr);
-            // 检查提取的数据是否有效
-            if (extractedData.formTitle || extractedData.projectInfo || 
-                extractedData.evaluationSections || extractedData.textualEvaluations) {
-              console.log('🔄 提取成功，尝试更新表单数据');
-              updateFormData(extractedData, false);
+          // 寻找任何可能的JSON对象
+          const jsonMatches = message.match(/{[^}]*}/g);
+          if (jsonMatches && jsonMatches.length > 0) {
+            // 尝试解析找到的每个JSON对象，选择包含最多键的对象
+            let bestMatch = null;
+            let maxKeys = 0;
+            
+            for (const jsonStr of jsonMatches) {
+              try {
+                const extractedData = JSON.parse(jsonStr);
+                if (extractedData && typeof extractedData === 'object') {
+                  const keyCount = Object.keys(extractedData).length;
+                  if (keyCount > maxKeys) {
+                    maxKeys = keyCount;
+                    bestMatch = extractedData;
+                  }
+                }
+              } catch (jsonParseError) {
+                // 忽略解析错误，继续尝试下一个
+              }
+            }
+            
+            if (bestMatch) {
+              console.log('🔍 从非SSE消息中提取最佳JSON匹配:', bestMatch);
+              updateFormData(bestMatch, false);
+              addAnalysisLog(`从非SSE消息中提取数据成功`, "success");
+            }
+          } else {
+            // 如果没有找到JSON对象，尝试更宽松的方法
+            const startIndex = message.indexOf('{');
+            const endIndex = message.lastIndexOf('}');
+            if (startIndex !== -1 && endIndex !== -1 && endIndex > startIndex) {
+              const jsonStr = message.substring(startIndex, endIndex + 1);
+              console.log('🔍 尝试从非SSE消息中提取 JSON:', jsonStr);
+              
+              try {
+                const extractedData = JSON.parse(jsonStr);
+                // 检查提取的数据是否有效
+                if (extractedData && typeof extractedData === 'object' && Object.keys(extractedData).length > 0) {
+                  console.log('🔄 提取成功，尝试更新表单数据');
+                  updateFormData(extractedData, false);
+                  addAnalysisLog(`从非SSE消息中成功提取数据`, "success");
+                }
+              } catch (jsonParseError) {
+                // 尝试修复可能的JSON错误
+                try {
+                  let fixedJsonStr = jsonStr.replace(/'/g, '"')
+                    .replace(/([{,])\s*([a-zA-Z0-9_]+)\s*:/g, '$1"$2":')
+                    .replace(/,\s*([}\]])/g, '$1');
+                  
+                  const extractedData = JSON.parse(fixedJsonStr);
+                  console.log('🔄 修复后解析成功，尝试更新表单数据');
+                  updateFormData(extractedData, false);
+                  addAnalysisLog(`成功修复并提取非SSE消息中的数据`, "success");
+                } catch (fixError) {
+                  console.error('❌ 无法从非SSE消息中提取有效JSON:', fixError);
+                }
+              }
             }
           }
         } catch (extractError) {
-          console.error('❌ 无法从非SSE消息中提取 JSON:', extractError);
+          console.error('❌ 尝试从非SSE消息中提取 JSON 时出错:', extractError);
+          addAnalysisLog(`从非SSE消息提取数据失败: ${extractError instanceof Error ? extractError.message : '未知错误'}`, "error");
         }
-        
-        addAnalysisLog(`收到非SSE格式数据: ${message}`, "warning");
       }
     }
     
