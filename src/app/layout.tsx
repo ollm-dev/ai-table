@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ClickToReactInitializer } from "@/components/ClickToReactInitializer";
+import { Toaster } from "@/components/ui/toast";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -19,6 +20,8 @@ export default function RootLayout({
     <html lang="zh-CN" className="scroll-smooth">
       <body className={`${inter.className} min-h-screen elegant-background`}>
         <ClickToReactInitializer />
+        {/* Toast通知组件 */}
+        <Toaster />
         {/* 背景装饰 */}
         <div className="fixed inset-0 -z-10 overflow-hidden">
           {/* 顶部光晕 */}

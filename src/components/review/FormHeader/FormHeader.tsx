@@ -1,7 +1,7 @@
 import React from 'react';
 import { CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileIcon, UploadIcon, XIcon } from "lucide-react";
+import { FileIcon, UploadIcon, XIcon, LoaderIcon, CheckIcon } from "lucide-react";
 import { FormHeaderProps } from "@/types/review/FormHeader/FormHeader";
 
 
@@ -14,7 +14,9 @@ export function FormHeader({
   handleRemovePdf,
   handleUploadPdf,
   uploadError,
-  uploadSuccess
+  uploadSuccess,
+  uploadStatusText,
+  waitingForAnalysis
 }: FormHeaderProps) {
   return (
     <CardHeader className="bg-gradient-to-r from-gray-50 via-white to-gray-50 border-b border-gray-100 py-12 px-14 relative overflow-hidden">
@@ -71,13 +73,23 @@ export function FormHeader({
                   type="button"
                   variant="default"
                   size="sm"
-                  className="ml-3 h-9 px-5 text-sm rounded-full bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700 transition-all duration-300 shadow-md hover:shadow-lg"
+                  className={`ml-3 h-9 px-5 text-sm rounded-full transition-all duration-300 shadow-md ${
+                    uploadSuccess 
+                      ? "bg-green-500 hover:bg-green-600" 
+                      : "bg-gradient-to-r from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700"
+                  }`}
                   onClick={handleUploadPdf}
-                  disabled={uploadSuccess}
+                  disabled={uploadSuccess || waitingForAnalysis}
                 >
                   {uploadSuccess ? (
                     <span className="flex items-center">
-                     上传成功😉
+                      <CheckIcon className="h-4 w-4 mr-2" />
+                      已上传
+                    </span>
+                  ) : waitingForAnalysis ? (
+                    <span className="flex items-center">
+                      <LoaderIcon className="h-4 w-4 mr-2 animate-spin" />
+                      准备分析中...
                     </span>
                   ) : '确认上传'}
                 </Button>
@@ -86,6 +98,19 @@ export function FormHeader({
           )}
         </div>
       </div>
+      
+      {/* 只在有内容且没有错误时显示上传状态文本 */}
+      {uploadStatusText && !uploadError && (
+        <div className="mt-6 text-sm text-primary-600 bg-primary-50/50 backdrop-blur-sm p-4 rounded-xl border border-primary-100 animate-fadeIn">
+          <span className="font-medium">状态：</span>{uploadStatusText}
+          {waitingForAnalysis && (
+            <span className="ml-2 inline-flex items-center">
+              <LoaderIcon className="h-3 w-3 mr-2 animate-spin" />
+              等待后端处理中...
+            </span>
+          )}
+        </div>
+      )}
       
       {/* 显示上传错误信息 */}
       {uploadError && (

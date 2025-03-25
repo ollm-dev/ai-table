@@ -67,9 +67,6 @@ export default function ReviewForm({ data }: ReviewFormProps) {
     updateFormData,
     resetFormData,
     jsonStructure,
-    setJsonStructure,
-    reasoningText,
-    finalContent
   } = useAnalysisLogs();
   
   // 保存当前使用的表单数据 (AI 分析后的数据或默认数据)
@@ -208,7 +205,9 @@ export default function ReviewForm({ data }: ReviewFormProps) {
     handleFileChange,
     handleUploadPdf,
     handleRemovePdf,
-    uploadSuccess
+    uploadSuccess,
+    uploadStatusText,
+    waitingForAnalysis
   } = useFileUpload(
     // 分析开始回调
     async (filePath) => {
@@ -280,10 +279,22 @@ export default function ReviewForm({ data }: ReviewFormProps) {
             // 1. 替换单引号为双引号
             let fixedJsonStr = jsonStr.replace(/'/g, '"');
             
-            // 2. 处理没有引号的属性名
+            // 2. 替换中文标点符号为英文标点符号
+            fixedJsonStr = fixedJsonStr.replace(/，/g, ','); // 替换中文逗号
+            fixedJsonStr = fixedJsonStr.replace(/、/g, ','); // 替换中文顿号
+            fixedJsonStr = fixedJsonStr.replace(/：/g, ':'); // 替换中文冒号
+            fixedJsonStr = fixedJsonStr.replace(/；/g, ';'); // 替换中文分号
+            fixedJsonStr = fixedJsonStr.replace(/（/g, '('); // 替换中文左括号
+            fixedJsonStr = fixedJsonStr.replace(/）/g, ')'); // 替换中文右括号
+            fixedJsonStr = fixedJsonStr.replace(/【/g, '['); // 替换中文左方括号
+            fixedJsonStr = fixedJsonStr.replace(/】/g, ']'); // 替换中文右方括号
+            fixedJsonStr = fixedJsonStr.replace(/"/g, '"'); // 替换中文双引号（左）
+            fixedJsonStr = fixedJsonStr.replace(/"/g, '"'); // 替换中文双引号（右）
+            
+            // 3. 处理没有引号的属性名
             fixedJsonStr = fixedJsonStr.replace(/([{,])\s*([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
             
-            // 3. 处理尾部多余的逗号
+            // 4. 处理尾部多余的逗号
             fixedJsonStr = fixedJsonStr.replace(/,\s*([}\]])/g, '$1');
             
             jsonData = JSON.parse(fixedJsonStr);
@@ -358,6 +369,8 @@ export default function ReviewForm({ data }: ReviewFormProps) {
           handleUploadPdf={handleUpload}
           uploadError={uploadError}
           uploadSuccess={uploadSuccess}
+          uploadStatusText={uploadStatusText}
+          waitingForAnalysis={waitingForAnalysis}
         />
         <CardContent className="p-8 lg:p-14">
           <ProjectInfoSection 

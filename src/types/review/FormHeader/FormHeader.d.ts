@@ -9,5 +9,7 @@ export interface FormHeaderProps {
   handleUploadPdf: () => void;
   uploadError: string | null;
   uploadSuccess: boolean;
+  uploadStatusText?: string;
+  waitingForAnalysis?: boolean;
 }
 

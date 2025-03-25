@@ -1,12 +1,22 @@
 import { useState, useRef } from 'react';
 // 导入API URL配置
 import { getUploadUrl } from '../lib/config';
+// 导入toast
+import { toast } from '@/components/ui/toast';
 
+/**
+ * 文件上传钩子，处理PDF文件的选择、验证和上传
+ * @param {function} onAnalysisStart - 分析开始时的回调函数
+ * @param {function} addAnalysisLog - 添加分析日志的函数
+ * @returns {object} 上传状态和控制方法
+ */
 export function useFileUpload(onAnalysisStart: (filePath: string) => Promise<void>, addAnalysisLog: (content: string, type?: string) => void) {
   const [pdfFile, setPdfFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [uploadSuccess, setUploadSuccess] = useState(false);
+  const [uploadStatusText, setUploadStatusText] = useState<string>(''); // 用于展示状态文本（过渡状态）
+  const [waitingForAnalysis, setWaitingForAnalysis] = useState(false); // 等待分析状态
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   /**
@@ -15,6 +25,9 @@ export function useFileUpload(onAnalysisStart: (filePath: string) => Promise<voi
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0] || null;
     setUploadError(null);
+    setUploadSuccess(false); // 重置上传成功状态
+    setUploadStatusText(''); // 重置状态文本
+    setWaitingForAnalysis(false); // 重置等待分析状态
     
     if (!file) {
       return;
@@ -23,12 +36,20 @@ export function useFileUpload(onAnalysisStart: (filePath: string) => Promise<voi
     // 验证文件类型
     if (file.type !== 'application/pdf') {
       setUploadError('只支持PDF文件');
+      toast.error('只支持PDF文件', {
+        id: 'file-type-error',
+        duration: 3000
+      });
       return;
     }
     
     // 验证文件大小 (限制为10MB)
     if (file.size > 10 * 1024 * 1024) {
       setUploadError('文件大小不能超过10MB');
+      toast.error('文件大小不能超过10MB', {
+        id: 'file-size-error',
+        duration: 3000
+      });
       return;
     }
     
@@ -41,12 +62,17 @@ export function useFileUpload(onAnalysisStart: (filePath: string) => Promise<voi
   const handleUploadPdf = async (onResetAI: () => void) => {
     if (!pdfFile) {
       setUploadError('请先选择PDF文件');
+      toast.error('请先选择PDF文件', {
+        id: 'no-file-error',
+        duration: 2000
+      });
       return;
     }
     
     try {
       setUploading(true);
       setUploadError(null);
+      setUploadStatusText('正在上传文件...'); // 设置初始上传状态文本
      
       // 重置AI建议状态
       onResetAI();
@@ -121,12 +147,32 @@ export function useFileUpload(onAnalysisStart: (filePath: string) => Promise<voi
       // 解析响应
       const result = await response.json();
       console.log('✅ 上传成功，服务器返回:', result);
+      
+      // 显示上传成功的toast通知
+      toast.success(`文件 "${result.file_name || pdfFile.name}" 上传成功！`, {
+        id: 'upload-success',
+        duration: 3000,
+        icon: '🎉'
+      });
+      
       addAnalysisLog(`文件上传成功: ${result.file_name || pdfFile.name}`, "upload-success");
       setUploadSuccess(true);
+      // 只短暂显示上传状态文本，然后清除
+      setUploadStatusText('文件上传成功，准备开始分析...'); 
+      // 3秒后清除状态文本
+      setTimeout(() => {
+        setUploadStatusText('');
+      }, 3000);
+      
+      // 在开始分析前设置等待状态
+      setWaitingForAnalysis(true);
+      
       // 开始分析
       if (result.file_path) {
         // 使用返回的文件路径调用分析API
         await onAnalysisStart(result.file_path);
+        // 分析开始后，重置等待状态
+        setWaitingForAnalysis(false);
       } else {
         throw new Error('服务器未返回文件路径');
       }
@@ -138,13 +184,39 @@ export function useFileUpload(onAnalysisStart: (filePath: string) => Promise<voi
       // 添加更具体的错误信息
       if (error instanceof DOMException && error.name === 'AbortError') {
         setUploadError('上传超时，请稍后重试或检查服务器状态');
+        setUploadStatusText('上传超时'); // 更新状态文本
+        
+        // 显示上传超时的toast通知
+        toast.error('上传超时，请稍后重试', {
+          id: 'upload-timeout',
+          duration: 4000
+        });
+        
         addAnalysisLog('上传超时，请稍后重试或检查服务器状态', "error");
       } else {
         setUploadError(errorMessage);
+        setUploadStatusText('上传失败'); // 更新状态文本
+        
+        // 显示上传失败的toast通知
+        toast.error(errorMessage, {
+          id: 'upload-error',
+          duration: 4000
+        });
+        
         addAnalysisLog(errorMessage, "error");
       }
-    } finally {
+      
+      // 重置上传成功状态和等待分析状态
       setUploadSuccess(false);
+      setWaitingForAnalysis(false);
+      
+      // 3秒后清除状态文本
+      setTimeout(() => {
+        setUploadStatusText('');
+      }, 3000);
+    } finally {
+      setUploading(false);
+      // 注意：在这里不重置uploadSuccess，让它保持到分析完成
     }
   };
   
@@ -154,6 +226,9 @@ export function useFileUpload(onAnalysisStart: (filePath: string) => Promise<voi
   const handleRemovePdf = () => {
     setPdfFile(null);
     setUploadError(null);
+    setUploadSuccess(false);
+    setUploadStatusText('');
+    setWaitingForAnalysis(false);
     
     // 重置文件输入
     if (fileInputRef.current) {
@@ -166,6 +241,8 @@ export function useFileUpload(onAnalysisStart: (filePath: string) => Promise<voi
     uploading,
     uploadError,
     uploadSuccess,
+    uploadStatusText, // 导出状态文本
+    waitingForAnalysis, // 导出等待分析状态
     fileInputRef,
     handleFileChange,
     handleUploadPdf,
