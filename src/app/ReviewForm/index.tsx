@@ -68,6 +68,8 @@ export default function ReviewForm({ data }: ReviewFormProps) {
     updateFormData,
     resetFormData,
     jsonStructure,
+    jsonCompleteStatus,
+    setJsonCompleteStatus
   } = useAnalysisLogs();
   
   // 保存当前使用的表单数据 (AI 分析后的数据或默认数据)
@@ -378,6 +380,8 @@ export default function ReviewForm({ data }: ReviewFormProps) {
             statusMessage={statusMessage}
             onApplyJsonStructure={handleApplyJsonStructure}
             jsonStructure={jsonStructure}
+            jsonCompleteStatus={jsonCompleteStatus}
+            setJsonCompleteStatus={setJsonCompleteStatus}
           />
           
           <TextualEvaluationSection 

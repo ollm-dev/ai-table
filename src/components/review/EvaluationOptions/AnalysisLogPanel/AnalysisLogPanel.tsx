@@ -4,6 +4,8 @@ import Markdown from '@/components/markdown';
 import { AnalysisLogPanelProps } from "@/types/review/EvaluationOptions/EvaluationOptionsSection";
 import { useState, useRef, useMemo, useEffect, useCallback } from "react";
 import { AIProcessFlow } from '../AIProcessFlow/AIProcessFlow';
+import { toast } from "sonner";
+
 
 export default function AnalysisLogPanel({ 
     analysisLogs, 
@@ -12,7 +14,9 @@ export default function AnalysisLogPanel({
     progress,
     statusMessage,
     onApplyJsonStructure,
-    jsonStructure
+    jsonStructure,
+    jsonCompleteStatus,
+    setJsonCompleteStatus
   }: AnalysisLogPanelProps) {
     const [activeTab, setActiveTab] = useState<'reasoning' | 'content' | 'json_structure'>('reasoning');
     const logContainerRef = useRef<HTMLDivElement>(null);
@@ -20,6 +24,12 @@ export default function AnalysisLogPanel({
     // 默认不自动滚动，让用户有完全的控制权
     const [autoScroll, setAutoScroll] = useState(false);
     const [showFillSuccess, setShowFillSuccess] = useState(false);
+    const [hasAppliedJson, setHasAppliedJson] = useState(false); // 跟踪是否已应用JSON
+    // 添加一个ref来存储上一次应用的JSON结构
+    const lastAppliedJsonRef = useRef<string | null>(null);
+    // 添加JSON长度来判断内容是否发生变化
+    const lastJsonLengthRef = useRef<number>(0);
+
     const userScrolledRef = useRef(false);
     const scrollPositionRef = useRef(0);
     const hasHandledScrollRef = useRef(false);
@@ -439,16 +449,32 @@ export default function AnalysisLogPanel({
           });
       }, [formattedJson]);
       
-      // 应用JSON结构
-      const handleApplyJson = useCallback(() => {
+      // 手动应用JSON数据
+      const handleManualApply = useCallback(() => {
         if (!jsonStructure || !onApplyJsonStructure) return;
         
         try {
+          console.log('手动应用JSON数据，数据长度:', jsonStructure.length);
           onApplyJsonStructure(jsonStructure);
+          
+          // 更新已应用的JSON引用
+          lastAppliedJsonRef.current = jsonStructure;
+          
+          toast.success('已手动应用AI数据', {
+            description: '评审表单已根据AI分析结果填充',
+            duration: 3000
+          });
+          
           setShowFillSuccess(true);
           setTimeout(() => setShowFillSuccess(false), 3000);
+          
+          console.log('手动应用JSON完成');
         } catch (error) {
-          console.error('应用JSON结构时出错:', error);
+          toast.error('手动应用失败', {
+            description: error instanceof Error ? error.message : '未知错误',
+            duration: 5000
+          });
+          console.error('手动应用JSON时出错:', error);
         }
       }, [jsonStructure, onApplyJsonStructure]);
 
@@ -518,37 +544,66 @@ export default function AnalysisLogPanel({
               </button>
             </div>
           </div>
-          
-         
-          {/* <div className="flex justify-between items-center">
-            {showFillSuccess ? (
-              <div className="px-6 py-2 bg-green-100 text-green-800 rounded-xl border border-green-200 shadow-md flex items-center mr-auto ml-auto">
-                <span className="mr-2">✓</span>
-                <span className="font-medium">应用成功</span>
-              </div>
-            ) : (
-              <button
-                type="button"
-                onClick={handleApplyJson}
-                disabled={!jsonStructure || isAnalyzing}
-                className={`flex items-center justify-center px-4 py-2 rounded-xl transition-all duration-300 border ${
-                  !jsonStructure || isAnalyzing
-                    ? 'bg-gray-100 text-gray-400 border-gray-200 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-primary-500 to-primary-600 text-white shadow-md border-primary-600 hover:shadow-lg'
-                }`}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2">
-                  <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"></path>
-                  <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                  <polyline points="7 3 7 8 15 8"></polyline>
-                </svg>
-                <span className="font-medium">应用AI填充</span>
-              </button>
-            )}
-          </div> */}
         </div>
       );
     };
+  
+    // 当JSON结构变化时，标记为完成状态
+    // useEffect(() => {
+    //   if (jsonCompleteStatus) {
+    //     setJsonCompleteStatus(true);
+    //   }
+    // }, [jsonCompleteStatus]);
+
+    // 分离为单独的useEffect，专门处理JSON应用
+    
+    
+    
+    
+    useEffect(() => {
+      // 只有当JSON已完成且标记为需要应用时才执行
+        if (!jsonStructure || !onApplyJsonStructure || !jsonCompleteStatus) {
+        return;
+      }
+
+      console.log('[自动应用] 开始应用JSON...');
+      console.log('[自动应用] JSON长度:', jsonStructure.length);
+      
+      try {
+        // 先显示Toast，让用户知道正在应用
+        toast.info('正在应用AI分析数据...', { duration: 1500 });
+        
+        // 直接调用应用函数
+        onApplyJsonStructure(jsonStructure);
+        
+        // 更新已应用的JSON引用
+        lastAppliedJsonRef.current = jsonStructure;
+        
+        // 重置完成状态，防止重复应用
+        setJsonCompleteStatus(false);
+        
+        // 显示成功提示
+        toast.success('AI数据已成功应用到表单', {
+          description: '评审表单已根据AI分析结果自动填充',
+          duration: 4000
+        });
+        
+        // 显示UI成功指示
+        setShowFillSuccess(true);
+        setTimeout(() => setShowFillSuccess(false), 3000);
+        
+        console.log('[自动应用] 成功完成');
+      } catch (error) {
+        toast.error('自动填充失败', {
+          description: error instanceof Error ? error.message : '未知错误',
+          duration: 5000
+        });
+        console.error('[自动应用] 出错:', error);
+        
+        // 即使出错也重置状态，避免无限重试
+        setJsonCompleteStatus(false);
+      }
+    }, [jsonStructure, onApplyJsonStructure, setJsonCompleteStatus]);
   
     return (
       <div className="w-full lg:w-3/5 order-1 lg:order-2 lg:border-l lg:pl-8 border-gray-100">
@@ -586,16 +641,6 @@ export default function AnalysisLogPanel({
                   </button>
                 ))}
               </div>
-              
-              {jsonStructure && activeTab === 'json_structure' && (
-                <button
-                  type="button"
-                  onClick={() => onApplyJsonStructure(jsonStructure)}
-                  className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-md hover:bg-green-200 transition-colors flex items-center"
-                >
-                  <span className="mr-1">✓</span> 应用JSON结构
-                </button>
-              )}
             </div>
             
             {/* AI分析流程组件 - 在进度条上方显示 */}

@@ -27,6 +27,8 @@ export function useAnalysisLogs() {
   const [reasoningText, setReasoningText] = useState('');
   const [finalContent, setFinalContent] = useState('');
   const [error, setError] = useState<string | null>(null);
+  // 添加JSON完成状态
+  const [jsonCompleteStatus, setJsonCompleteStatus] = useState(false);
   
   // 使用 useRef 缓存最新的表单数据，初始化为空的表单数据结构
   const formDataRef = useRef<FormData>({...emptyFormData});
@@ -71,10 +73,11 @@ export function useAnalysisLogs() {
   }, [addAnalysisLog]);
   
   // 更新表单数据
-  const updateFormData = useCallback((jsonStructure: any, isPartial: boolean = false) => {
+  const updateFormData = useCallback((jsonStructure: any, isPartial: boolean = false, isComplete: boolean = false) => {
     updateFormDataImpl(
       jsonStructure,
       isPartial,
+      isComplete,
       formDataRef,
       lastUpdateTimeRef,
       structureInitializedRef,
@@ -111,6 +114,7 @@ export function useAnalysisLogs() {
       addAnalysisLog,
       updateLogContent,
       updateFormData,
+      setJsonCompleteStatus,
       useMockData
     );
   }, [addAnalysisLog, resetFormData, updateFormData, updateLogContent]);
@@ -159,6 +163,8 @@ export function useAnalysisLogs() {
     jsonStructure,
     setJsonStructure,
     reasoningText,
-    finalContent
+    finalContent,
+    jsonCompleteStatus,
+    setJsonCompleteStatus
   };
 } 

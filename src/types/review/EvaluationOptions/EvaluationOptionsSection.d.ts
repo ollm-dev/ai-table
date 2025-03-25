@@ -37,6 +37,10 @@ export interface EvaluationOptionsSectionProps {
   onApplyJsonStructure: (jsonStructure: string) => void;
   /** JSON结构数据 */
   jsonStructure?: string;
+  /** JSON结构完成状态 */
+  jsonCompleteStatus: boolean;
+  /** 设置JSON结构完成状态的函数 */
+  setJsonCompleteStatus: React.Dispatch<React.SetStateAction<boolean>>;
 }
 export interface EvaluationSectionItemProps {
   section: EvaluationSection;
@@ -61,5 +65,9 @@ export interface AnalysisLogPanelProps {
   onApplyJsonStructure: (jsonStructure: string) => void;
   /** JSON结构数据 */
   jsonStructure?: string;
+  /** JSON结构完成状态 */
+  jsonCompleteStatus: boolean;
+  /** 设置JSON结构完成状态的函数 */
+  setJsonCompleteStatus: React.Dispatch<React.SetStateAction<boolean>>;
 }
 

@@ -22,6 +22,8 @@ import EvaluationSectionItem from "./EvaluationSectionItem/EvaluationSectionItem
  * @param {string} props.statusMessage - 状态消息
  * @param {Function} props.onApplyJsonStructure - 应用JSON结构的回调函数
  * @param {string} props.jsonStructure - JSON结构数据 
+ * @param {boolean} props.jsonCompleteStatus - JSON结构是否完成
+ * @param {Function} props.setJsonCompleteStatus - 设置JSON结构完成状态的回调函数
  */
 export function EvaluationOptionsSection({
   evaluationSections,
@@ -35,7 +37,9 @@ export function EvaluationOptionsSection({
   progress,
   statusMessage,
   onApplyJsonStructure,
-  jsonStructure
+  jsonStructure,
+  jsonCompleteStatus,
+  setJsonCompleteStatus
 }: EvaluationOptionsSectionProps) {
   
   return (
@@ -86,6 +90,8 @@ export function EvaluationOptionsSection({
           statusMessage={statusMessage}
           onApplyJsonStructure={onApplyJsonStructure}
           jsonStructure={jsonStructure}
+          jsonCompleteStatus={jsonCompleteStatus}
+          setJsonCompleteStatus={setJsonCompleteStatus}
         />
       </div>
     </div>

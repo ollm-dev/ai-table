@@ -20,6 +20,7 @@ import { simulateAnalysisProcess } from './mockAnalysis';
  * @param updateLogContent 更新日志内容函数
  * @param addAnalysisLog 添加分析日志函数
  * @param updateFormData 更新表单数据函数
+ * @param setJsonCompleteStatus 设置JSON完成状态函数
  * @returns 处理完成Promise
  */
 export const processStream = async (
@@ -32,7 +33,8 @@ export const processStream = async (
   setError: (value: React.SetStateAction<string | null>) => void,
   updateLogContent: (type: string, content: string, append?: boolean) => void,
   addAnalysisLog: (content: string, type?: string) => void,
-  updateFormData: (jsonStructure: any, isPartial?: boolean) => void
+  updateFormData: (jsonStructure: any, isPartial?: boolean, isComplete?: boolean) => void,
+  setJsonCompleteStatus: (value: React.SetStateAction<boolean>) => void
 ): Promise<void> => {
   try {
     const { done, value } = await reader.read();
@@ -128,137 +130,25 @@ export const processStream = async (
               if (data.json_complete) {
                 console.log('✅ 接收到完整JSON结构:', data.json_complete);
                 addAnalysisLog(`接收到完整JSON结构`, "json_complete");
+                // 设置JSON完成状态为true，表示已收到完整JSON
+                setJsonCompleteStatus(true);
                 
-                try {
-                  // 尝试解析和更新完整数据
-                  let completeStructure = data.json_complete;
-                  if (typeof completeStructure === 'string') {
-                    try {
-                      completeStructure = JSON.parse(completeStructure);
-                    } catch (parseError) {
-                      console.error('❌ JSON完整结构解析失败:', parseError);
-                      
-                      // 增强的JSON修复逻辑
-                      try {
-                        // 1. 替换单引号为双引号
-                        let fixedJsonStr = completeStructure.replace(/'/g, '"');
-                        
-                        // 2. 处理没有引号的属性名
-                        fixedJsonStr = fixedJsonStr.replace(/([{,])\s*([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
-                        
-                        // 3. 处理尾部多余的逗号
-                        fixedJsonStr = fixedJsonStr.replace(/,\s*([}\]])/g, '$1');
-                        
-                        // 4. 处理字符串中的换行符
-                        fixedJsonStr = fixedJsonStr.replace(/(["])([^"]*?)[\n\r]+([^"]*?)(["])/g, '$1$2 $3$4');
-                        
-                        // 5. 尝试修复未闭合的引号和括号
-                        const quotes = (fixedJsonStr.match(/"/g) || []).length;
-                        if (quotes % 2 !== 0) {
-                          console.warn('⚠️ 检测到未闭合的引号，尝试修复');
-                          // 在字符串末尾添加引号
-                          const lastQuoteIndex = fixedJsonStr.lastIndexOf('"');
-                          if (lastQuoteIndex !== -1) {
-                            fixedJsonStr += '"';
-                          }
-                        }
-                        
-                        const openBraces = (fixedJsonStr.match(/{/g) || []).length;
-                        const closeBraces = (fixedJsonStr.match(/}/g) || []).length;
-                        if (openBraces > closeBraces) {
-                          console.warn(`⚠️ 检测到未闭合的大括号，尝试修复`);
-                          // 在字符串末尾添加缺少的大括号
-                          for (let i = 0; i < openBraces - closeBraces; i++) {
-                            fixedJsonStr += '}';
-                          }
-                        }
-                        
-                        const openBrackets = (fixedJsonStr.match(/\[/g) || []).length;
-                        const closeBrackets = (fixedJsonStr.match(/\]/g) || []).length;
-                        if (openBrackets > closeBrackets) {
-                          console.warn(`⚠️ 检测到未闭合的方括号，尝试修复`);
-                          // 在字符串末尾添加缺少的方括号
-                          for (let i = 0; i < openBrackets - closeBrackets; i++) {
-                            fixedJsonStr += ']';
-                          }
-                        }
-                        
-                        try {
-                          completeStructure = JSON.parse(fixedJsonStr);
-                          console.log('✅ 修复后解析成功:', completeStructure);
-                          addAnalysisLog(`JSON完整结构格式已自动修复`, "success");
-                        } catch (innerParseError) {
-                          // 如果第一次修复失败，尝试更激进的修复方法
-                          console.error('❌ 第一次修复失败，尝试更激进的修复:', innerParseError);
-                          
-                          // 尝试提取最外层的JSON对象
-                          const objectMatch = fixedJsonStr.match(/{[^]*?}/);
-                          if (objectMatch && objectMatch[0]) {
-                            const extractedObject = objectMatch[0];
-                            completeStructure = JSON.parse(extractedObject);
-                            console.log('✅ 从字符串中提取JSON对象成功');
-                            addAnalysisLog(`从损坏的JSON中提取有效数据成功`, "success");
-                          } else {
-                            throw new Error("无法从损坏的JSON中提取有效数据");
-                          }
-                        }
-                      } catch (fixError) {
-                        console.error('❌ 所有修复尝试失败，尝试继续处理:', fixError);
-                        addAnalysisLog(`JSON修复失败: ${fixError instanceof Error ? fixError.message : '未知错误'}`, "error");
-                        
-                        // 尝试从原始字符串中提取有意义的部分字段
-                        try {
-                          // 创建一个空对象
-                          completeStructure = {};
-                          
-                          // 尝试提取可能的评分数值
-                          const scoreMatches = completeStructure.match(/["']?(\w+)["']?\s*:\s*(\d+)/g);
-                          if (scoreMatches) {
-                            scoreMatches.forEach((match: string) => {
-                              const [key, value] = match.split(':').map((s: string) => s.trim().replace(/["']/g, ''));
-                              if (key && value) {
-                                // @ts-ignore
-                                completeStructure[key] = parseInt(value, 10);
-                              }
-                            });
-                          }
-                          
-                          console.log('⚠️ 尝试从原始字符串提取部分数据:', completeStructure);
-                          addAnalysisLog(`尝试部分恢复数据`, "warning");
-                        } catch (extractError) {
-                          console.error('❌ 数据提取失败:', extractError);
-                        }
-                      }
-                    }
+                // 同时使用完整标志更新表单数据
+                if (typeof data.json_complete === 'object') {
+                  updateFormData(data.json_complete, false, true);
+                } else if (typeof data.json_complete === 'string' && data.json_complete.trim()) {
+                  try {
+                    const parsedJson = JSON.parse(data.json_complete);
+                    updateFormData(parsedJson, false, true);
+                  } catch (jsonError) {
+                    console.error('❌ 无法解析完整JSON结构:', jsonError);
+                    addAnalysisLog(`无法解析完整JSON结构: ${jsonError instanceof Error ? jsonError.message : '未知错误'}`, "error");
                   }
-                  
-                  // 验证数据结构是否有效
-                  if (completeStructure && typeof completeStructure === 'object') {
-                    console.log('✅ 有效的完整表单数据结构，更新表单');
-                    
-                    // 转换API返回的评估数据结构为前端表单数据结构
-                    const transformedData = transformApiJsonToFormData(completeStructure);
-                    
-                    // 使用非部分更新模式，确保完整更新
-                    updateFormData(transformedData, false);
-                    
-                    // 添加成功处理的日志
-                    addAnalysisLog(`成功更新表单数据结构`, "success");
-                  } else {
-                    console.warn('⚠️ 完整JSON结构格式不符合预期:', completeStructure);
-                    addAnalysisLog(`JSON结构格式不符合预期，尝试部分应用`, "warning");
-                    
-                    // 尝试将其作为原始对象直接应用
-                    updateFormData(completeStructure, false);
-                  }
-                } catch (completeStructureError) {
-                  console.error('❌ 处理完整JSON结构时出错:', completeStructureError);
-                  addAnalysisLog(`处理完整JSON结构时出错: ${completeStructureError instanceof Error ? completeStructureError.message : '未知错误'}`, "error");
                 }
               }
               break;
               
-            case 'error':
+             case 'error':
               // 处理错误
               console.error('❌ 错误消息:', data.message);
               setError(data.message || '处理过程中发生未知错误');
@@ -271,11 +161,13 @@ export const processStream = async (
               // 尝试检测数据本身是否为 JSON 结构（非标准消息）
               if (data.formTitle || data.projectInfo || data.evaluationSections || data.textualEvaluations) {
                 console.log('🔍 检测到有效表单数据结构，尝试更新');
-                updateFormData(data, false);
+                // 默认非完整JSON
+                updateFormData(data, false, false);
               } else if (typeof data === 'object' && Object.keys(data).length > 0) {
                 // 如果是含有数据的对象，即使不符合预期格式也尝试应用
                 console.log('🔍 检测到非标准JSON对象，尝试作为有效数据应用');
-                updateFormData(data, false);
+                // 默认非完整JSON
+                updateFormData(data, false, false);
                 addAnalysisLog(`应用了非标准格式的数据`, "warning");
               } else {
                 addAnalysisLog(`收到未知类型消息: ${JSON.stringify(data)}`, "unknown");
@@ -301,7 +193,8 @@ export const processStream = async (
                   // 检查提取的数据是否有效
                   if (extractedData && typeof extractedData === 'object' && Object.keys(extractedData).length > 0) {
                     console.log('🔄 提取成功，尝试更新表单数据');
-                    updateFormData(extractedData, false);
+                    // 从错误消息中提取的数据默认非完整JSON
+                    updateFormData(extractedData, false, false);
                     addAnalysisLog(`从错误消息中成功提取数据`, "success");
                     break; // 一旦找到有效数据就退出循环
                   }
@@ -323,7 +216,8 @@ export const processStream = async (
                   // 检查提取的数据是否有效
                   if (extractedData && typeof extractedData === 'object' && Object.keys(extractedData).length > 0) {
                     console.log('🔄 提取成功，尝试更新表单数据');
-                    updateFormData(extractedData, false);
+                    // 从错误消息中提取的数据默认非完整JSON
+                    updateFormData(extractedData, false, false);
                     addAnalysisLog(`从错误消息中成功提取数据`, "success");
                   }
                 } catch (jsonParseError) {
@@ -335,7 +229,8 @@ export const processStream = async (
                     
                     const extractedData = JSON.parse(fixedJsonStr);
                     console.log('🔄 修复后解析成功，尝试更新表单数据');
-                    updateFormData(extractedData, false);
+                    // 修复后的数据默认非完整JSON
+                    updateFormData(extractedData, false, false);
                     addAnalysisLog(`成功修复并提取错误消息中的数据`, "success");
                   } catch (fixError) {
                     console.error('❌ 无法从错误消息中提取有效JSON:', fixError);
@@ -378,7 +273,8 @@ export const processStream = async (
             
             if (bestMatch) {
               console.log('🔍 从非SSE消息中提取最佳JSON匹配:', bestMatch);
-              updateFormData(bestMatch, false);
+              // 非SSE消息提取的数据默认非完整JSON
+              updateFormData(bestMatch, false, false);
               addAnalysisLog(`从非SSE消息中提取数据成功`, "success");
             }
           } else {
@@ -394,7 +290,8 @@ export const processStream = async (
                 // 检查提取的数据是否有效
                 if (extractedData && typeof extractedData === 'object' && Object.keys(extractedData).length > 0) {
                   console.log('🔄 提取成功，尝试更新表单数据');
-                  updateFormData(extractedData, false);
+                  // 非SSE消息提取的数据默认非完整JSON
+                  updateFormData(extractedData, false, false);
                   addAnalysisLog(`从非SSE消息中成功提取数据`, "success");
                 }
               } catch (jsonParseError) {
@@ -406,7 +303,8 @@ export const processStream = async (
                   
                   const extractedData = JSON.parse(fixedJsonStr);
                   console.log('🔄 修复后解析成功，尝试更新表单数据');
-                  updateFormData(extractedData, false);
+                  // 修复后的数据默认非完整JSON
+                  updateFormData(extractedData, false, false);
                   addAnalysisLog(`成功修复并提取非SSE消息中的数据`, "success");
                 } catch (fixError) {
                   console.error('❌ 无法从非SSE消息中提取有效JSON:', fixError);
@@ -432,7 +330,8 @@ export const processStream = async (
       setError,
       updateLogContent,
       addAnalysisLog,
-      updateFormData
+      updateFormData,
+      setJsonCompleteStatus
     );
   } catch (streamError) {
     console.error('❌ 读取流失败:', streamError);
@@ -457,6 +356,7 @@ export const processStream = async (
  * @param addAnalysisLog 添加分析日志函数
  * @param updateLogContent 更新日志内容函数
  * @param updateFormData 更新表单数据函数
+ * @param setJsonCompleteStatus 设置JSON完成状态函数
  * @param useMockData 是否使用模拟数据
  * @returns 处理结果布尔值
  */
@@ -474,7 +374,8 @@ export const startAnalysisWithBackend = async (
   resetFormData: () => void,
   addAnalysisLog: (content: string, type?: string) => void,
   updateLogContent: (type: string, content: string, append?: boolean) => void,
-  updateFormData: (jsonStructure: any, isPartial?: boolean) => void,
+  updateFormData: (jsonStructure: any, isPartial?: boolean, isComplete?: boolean) => void,
+  setJsonCompleteStatus: (value: React.SetStateAction<boolean>) => void,
   useMockData: boolean = false
 ) => {
   try {
@@ -488,6 +389,7 @@ export const startAnalysisWithBackend = async (
     setJsonStructure('');
     setFinalContent('');
     setError(null);
+    setJsonCompleteStatus(false); // 重置JSON完成状态
     
     // 重置表单数据
     resetFormData();
@@ -516,6 +418,20 @@ export const startAnalysisWithBackend = async (
         setFinalContent,
         setJsonStructure
       );
+      
+      // 模拟分析完成后，设置JSON完成状态为true
+      setJsonCompleteStatus(true);
+      
+      // 模拟分析完成后，更新表单数据，标记为完整JSON
+      // 这里可以添加模拟的完整JSON数据更新
+      const mockCompleteData = {
+        // 模拟的完整JSON数据结构
+        formTitle: "论文评审报告",
+        projectInfo: { /* 模拟的项目信息 */ },
+        evaluationSections: [ /* 模拟的评估部分 */ ],
+        textualEvaluations: [ /* 模拟的文本评估 */ ]
+      };
+      updateFormData(mockCompleteData, false, true);
       
       return true;
     }
@@ -584,7 +500,8 @@ export const startAnalysisWithBackend = async (
       setError,
       updateLogContent,
       addAnalysisLog,
-      updateFormData
+      updateFormData,
+      setJsonCompleteStatus
     );
     
     return true;

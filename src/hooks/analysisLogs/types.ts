@@ -72,6 +72,10 @@ export interface AnalysisLogsState {
   error: string | null;
   formData: FormData;
   registerUpdateCallback: (callback: (data: any) => void) => void;
-  updateFormData: (jsonStructure: any, isPartial?: boolean) => void;
+  updateFormData: (jsonStructure: any, isPartial?: boolean, isComplete?: boolean) => void;
   resetFormData: () => void;
+  /** JSON完成状态，表示是否已收到完整的JSON结构 */
+  jsonCompleteStatus: boolean;
+  /** 设置JSON完成状态的函数 */
+  setJsonCompleteStatus: React.Dispatch<React.SetStateAction<boolean>>;
 } 

@@ -78,6 +78,7 @@ export const initializeFormStructure = (
  * 更新表单数据
  * @param jsonStructure JSON 结构数据
  * @param isPartial 是否为部分更新
+ * @param isComplete 是否为完整JSON（最终版本）
  * @param formDataRef 表单数据引用
  * @param lastUpdateTimeRef 最后更新时间引用
  * @param structureInitializedRef 结构初始化状态引用
@@ -89,6 +90,7 @@ export const initializeFormStructure = (
 export const updateFormData = (
   jsonStructure: any,
   isPartial: boolean = false,
+  isComplete: boolean = false,
   formDataRef: React.MutableRefObject<FormData>,
   lastUpdateTimeRef: React.MutableRefObject<number>,
   structureInitializedRef: React.MutableRefObject<boolean>,
@@ -100,12 +102,19 @@ export const updateFormData = (
   if (!jsonStructure) return;
   
   try {
-    // 节流控制：200ms 内只更新一次（防止高频更新）
-    const now = Date.now();
-    if (now - lastUpdateTimeRef.current < 200) {
-      return;
+    // 如果是完整的JSON，记录并且标记特殊处理
+    if (isComplete) {
+      console.log('✅ 接收到完整JSON数据结构');
+      addAnalysisLog(`接收到完整JSON数据，开始最终处理`, "json_complete");
+      // 完整JSON不受节流限制，始终处理
+    } else {
+      // 节流控制：200ms 内只更新一次（防止高频更新），但完整JSON始终处理
+      const now = Date.now();
+      if (now - lastUpdateTimeRef.current < 200) {
+        return;
+      }
+      lastUpdateTimeRef.current = now;
     }
-    lastUpdateTimeRef.current = now;
     
     console.log('📊 接收到表单数据结构:', jsonStructure, isPartial ? '(部分更新)' : '(完整更新)');
     
@@ -218,6 +227,13 @@ export const updateFormData = (
     // 深拷贝当前表单数据
     const updatedFormData = JSON.parse(JSON.stringify(formDataRef.current));
     
+    // 如果是完整JSON，特殊处理
+    if (isComplete) {
+      addAnalysisLog(`处理完整JSON数据`, "json_processing");
+      // 对于完整的JSON，我们可能希望完全替换某些部分，而不是仅更新
+      // 这里根据实际需求进行处理
+    }
+    
     // 更新表单标题（如果有）
     if (normalizedData.formTitle) {
       updatedFormData.formTitle = normalizedData.formTitle;
@@ -250,49 +266,41 @@ export const updateFormData = (
             updatedFormData.evaluationSections = [];
           }
           
-          normalizedData.evaluationSections.forEach((section: any) => {
-            if (!section || typeof section !== 'object') {
-              console.warn('⚠️ 跳过无效的评估部分:', section);
-              return; // 跳过无效项
-            }
-            
-            if (!section.id) {
-              console.warn('⚠️ 跳过没有id的评估部分:', section);
-              return; // 跳过没有 id 的部分
-            }
-            
-            const index = updatedFormData.evaluationSections.findIndex((s: any) => s.id === section.id);
-            if (index !== -1) {
-              // 已存在项，更新其属性
-              try {
-                updatedFormData.evaluationSections[index] = {
-                  ...updatedFormData.evaluationSections[index],
-                  ...section,
-                  // 确保 aiRecommendation 和 aiReason 正确更新
-                  aiRecommendation: section.aiRecommendation !== undefined ? 
-                    section.aiRecommendation : 
-                    updatedFormData.evaluationSections[index].aiRecommendation,
-                  aiReason: section.aiReason !== undefined ? 
-                    section.aiReason : 
-                    updatedFormData.evaluationSections[index].aiReason
-                };
-              } catch (updateSectionError) {
-                console.error(`❌ 更新评估部分${section.id}时出错:`, updateSectionError);
+          // 如果是完整JSON，可以考虑完全替换评估部分
+          if (isComplete && normalizedData.evaluationSections.length > 0) {
+            updatedFormData.evaluationSections = [...normalizedData.evaluationSections];
+          } else {
+            // 否则，更新现有评估部分
+            // 创建ID到对象的映射，便于快速查找
+            const sectionsMap = new Map();
+            updatedFormData.evaluationSections.forEach((section: any) => {
+              if (section && section.id) {
+                sectionsMap.set(section.id, section);
               }
-            } else if (!isPartial) {
-              // 只有在非部分更新时才添加新项目
-              try {
+            });
+            
+            // 更新或新增评估部分
+            normalizedData.evaluationSections.forEach((section: any) => {
+              if (section && section.id) {
+                if (sectionsMap.has(section.id)) {
+                  // 更新现有部分
+                  const existingSection = sectionsMap.get(section.id);
+                  Object.assign(existingSection, section);
+                } else {
+                  // 添加新部分
+                  updatedFormData.evaluationSections.push(section);
+                }
+              } else if (section) {
+                // 没有ID但有内容，添加
                 updatedFormData.evaluationSections.push(section);
-              } catch (addSectionError) {
-                console.error('❌ 添加新评估部分时出错:', addSectionError);
               }
-            }
-          });
+            });
+          }
         } else {
-          console.warn('⚠️ evaluationSections不是数组:', normalizedData.evaluationSections);
+          console.warn('⚠️ evaluationSections不是有效数组:', normalizedData.evaluationSections);
         }
       } catch (evaluationSectionsError) {
-        console.error('❌ 处理evaluationSections时出错:', evaluationSectionsError);
+        console.error('❌ 更新evaluationSections出错:', evaluationSectionsError);
       }
     }
     
@@ -306,72 +314,67 @@ export const updateFormData = (
             updatedFormData.textualEvaluations = [];
           }
           
-          normalizedData.textualEvaluations.forEach((evaluation: any) => {
-            if (!evaluation || typeof evaluation !== 'object') {
-              console.warn('⚠️ 跳过无效的文本评估:', evaluation);
-              return; // 跳过无效项
-            }
-            
-            if (!evaluation.id) {
-              console.warn('⚠️ 跳过没有id的文本评估:', evaluation);
-              return; // 跳过没有 id 的部分
-            }
-            
-            const index = updatedFormData.textualEvaluations.findIndex((e: any) => e.id === evaluation.id);
-            if (index !== -1) {
-              // 已存在项，更新其属性
-              try {
-                updatedFormData.textualEvaluations[index] = {
-                  ...updatedFormData.textualEvaluations[index],
-                  ...evaluation,
-                  // 确保 aiRecommendation 正确更新
-                  aiRecommendation: evaluation.aiRecommendation !== undefined ? 
-                    evaluation.aiRecommendation : 
-                    updatedFormData.textualEvaluations[index].aiRecommendation
-                };
-              } catch (updateEvalError) {
-                console.error(`❌ 更新文本评估${evaluation.id}时出错:`, updateEvalError);
+          // 如果是完整JSON，可以考虑完全替换文本评估部分
+          if (isComplete && normalizedData.textualEvaluations.length > 0) {
+            updatedFormData.textualEvaluations = [...normalizedData.textualEvaluations];
+          } else {
+            // 否则，更新现有文本评估部分
+            // 创建ID到对象的映射，便于快速查找
+            const textualsMap = new Map();
+            updatedFormData.textualEvaluations.forEach((textual: any) => {
+              if (textual && textual.id) {
+                textualsMap.set(textual.id, textual);
               }
-            } else if (!isPartial) {
-              // 只有在非部分更新时才添加新项目
-              try {
-                updatedFormData.textualEvaluations.push(evaluation);
-              } catch (addEvalError) {
-                console.error('❌ 添加新文本评估时出错:', addEvalError);
+            });
+            
+            // 更新或新增文本评估
+            normalizedData.textualEvaluations.forEach((textual: any) => {
+              if (textual && textual.id) {
+                if (textualsMap.has(textual.id)) {
+                  // 更新现有文本评估
+                  const existingTextual = textualsMap.get(textual.id);
+                  Object.assign(existingTextual, textual);
+                } else {
+                  // 添加新文本评估
+                  updatedFormData.textualEvaluations.push(textual);
+                }
+              } else if (textual) {
+                // 没有ID但有内容，添加
+                updatedFormData.textualEvaluations.push(textual);
               }
-            }
-          });
+            });
+          }
         } else {
-          console.warn('⚠️ textualEvaluations不是数组:', normalizedData.textualEvaluations);
+          console.warn('⚠️ textualEvaluations不是有效数组:', normalizedData.textualEvaluations);
         }
       } catch (textualEvaluationsError) {
-        console.error('❌ 处理textualEvaluations时出错:', textualEvaluationsError);
+        console.error('❌ 更新textualEvaluations出错:', textualEvaluationsError);
       }
     }
     
-    // 如果数据未发生变化，则不触发更新
-    if (isEqual(formDataRef.current, updatedFormData)) {
-      console.log('⚠️ 数据未变化，跳过更新');
-      return;
+    // 如果是完整的JSON，记录完成事件
+    if (isComplete) {
+      addAnalysisLog(`完整JSON数据处理完成`, "json_complete_processed");
     }
     
-    console.log('🔄 更新后的表单数据:', updatedFormData);
-    
-    // 更新 ref 缓存的数据
+    // 更新状态
     formDataRef.current = updatedFormData;
     
     // 更新状态中的数据，触发组件重渲染
-    setFormData(updatedFormData);
+    setFormData(prevData => {
+      // 如果新数据与旧数据相同，不进行更新（防止不必要的重渲染）
+      if (isEqual(prevData, updatedFormData)) {
+        return prevData;
+      }
+      return {...updatedFormData};
+    });
     
     // 调用外部更新回调
     if (dataUpdateCallbackRef.current) {
       dataUpdateCallbackRef.current(updatedFormData);
     }
-    
-    // 添加日志
-    addAnalysisLog(isPartial ? "表单数据已部分更新" : "表单数据已完全更新", "data-update");
   } catch (error) {
-    console.error('❌ 更新表单数据失败:', error);
-    addAnalysisLog(`更新表单数据失败: ${error instanceof Error ? error.message : '未知错误'}`, "error");
+    console.error('❌ 更新表单数据结构失败:', error);
+    addAnalysisLog(`更新表单数据结构失败: ${error instanceof Error ? error.message : '未知错误'}`, "error");
   }
 }; 
