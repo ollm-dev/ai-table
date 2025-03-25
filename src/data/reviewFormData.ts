@@ -30,7 +30,7 @@ export const reviewFormData = {
     },
     {
       id: "relationshipExplanation",
-      title: "综合评价中的\"优\"与\"良\"与其他意见中的\"优先资助\"关系",
+      title: "资助意见",
       description: "请选择适当的关系描述",
       options: ["优先资助", "可资", "不予资助"],
       required: true,

@@ -10,6 +10,7 @@ import { FormStyles } from '@/app/ReviewForm/css';
 import { useReviewForm, FormState } from '@/hooks/useReviewForm';
 import { useFileUpload } from '@/hooks/useFileUpload';
 import { useAnalysisLogs } from '@/hooks/useAnalysisLogs';
+import { jsonrepair } from 'jsonrepair';
 
 
 interface ReviewFormProps {
@@ -272,51 +273,33 @@ export default function ReviewForm({ data }: ReviewFormProps) {
         try {
           jsonData = JSON.parse(jsonStr);
         } catch (parseError) {
-          console.error('❌ JSON解析失败，尝试修复:', parseError);
+          console.error('❌ JSON解析失败，尝试使用 jsonrepair 修复:', parseError);
           
-          // 尝试修复JSON格式问题
+          // 使用 jsonrepair 库修复 JSON
           try {
-            // 1. 替换单引号为双引号
-            let fixedJsonStr = jsonStr.replace(/'/g, '"');
-            
-            // 2. 替换中文标点符号为英文标点符号
-            fixedJsonStr = fixedJsonStr.replace(/，/g, ','); // 替换中文逗号
-            fixedJsonStr = fixedJsonStr.replace(/、/g, ','); // 替换中文顿号
-            fixedJsonStr = fixedJsonStr.replace(/：/g, ':'); // 替换中文冒号
-            fixedJsonStr = fixedJsonStr.replace(/；/g, ';'); // 替换中文分号
-            fixedJsonStr = fixedJsonStr.replace(/（/g, '('); // 替换中文左括号
-            fixedJsonStr = fixedJsonStr.replace(/）/g, ')'); // 替换中文右括号
-            fixedJsonStr = fixedJsonStr.replace(/【/g, '['); // 替换中文左方括号
-            fixedJsonStr = fixedJsonStr.replace(/】/g, ']'); // 替换中文右方括号
-            fixedJsonStr = fixedJsonStr.replace(/"/g, '"'); // 替换中文双引号（左）
-            fixedJsonStr = fixedJsonStr.replace(/"/g, '"'); // 替换中文双引号（右）
-            
-            // 3. 处理没有引号的属性名
-            fixedJsonStr = fixedJsonStr.replace(/([{,])\s*([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
-            
-            // 4. 处理尾部多余的逗号
-            fixedJsonStr = fixedJsonStr.replace(/,\s*([}\]])/g, '$1');
-            
-            jsonData = JSON.parse(fixedJsonStr);
-            console.log('✅ 修复后成功解析JSON');
-            addAnalysisLog('JSON格式已自动修复', 'success');
-          } catch (fixError) {
-            console.error('❌ 修复JSON失败:', fixError);
+            const repairedJson = jsonrepair(jsonStr);
+            jsonData = JSON.parse(repairedJson);
+            console.log('✅ jsonrepair 成功修复并解析 JSON');
+            addAnalysisLog('JSON格式已使用 jsonrepair 自动修复', 'success');
+          } catch (repairError) {
+            console.error('❌ jsonrepair 修复失败:', repairError);
             
             // 尝试从字符串中提取有效的JSON对象
             const objectMatch = jsonStr.match(/{[^]*?}/);
             if (objectMatch && objectMatch[0]) {
               try {
                 const extractedObject = objectMatch[0];
-                jsonData = JSON.parse(extractedObject);
-                console.log('✅ 提取JSON对象成功');
-                addAnalysisLog('从不完整数据中提取JSON成功', 'success');
+                // 再次尝试使用 jsonrepair 修复提取的对象
+                const repairedExtracted = jsonrepair(extractedObject);
+                jsonData = JSON.parse(repairedExtracted);
+                console.log('✅ 提取并修复 JSON 对象成功');
+                addAnalysisLog('从不完整数据中提取并修复 JSON 成功', 'success');
               } catch (extractError) {
-                console.error('❌ 提取JSON对象失败:', extractError);
-                throw new Error("无法解析JSON数据");
+                console.error('❌ 提取 JSON 对象失败:', extractError);
+                throw new Error("无法解析 JSON 数据");
               }
             } else {
-              throw new Error("无法识别有效的JSON数据");
+              throw new Error("无法识别有效的 JSON 数据");
             }
           }
         }
@@ -326,7 +309,7 @@ export default function ReviewForm({ data }: ReviewFormProps) {
       
       // 确保数据为对象
       if (!jsonData || typeof jsonData !== 'object') {
-        throw new Error("无效的JSON数据结构");
+        throw new Error("无效的 JSON 数据结构");
       }
       
       // 使用updateFormData函数更新表单数据
