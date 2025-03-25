@@ -7,6 +7,7 @@ import { ReviewRequestParams } from './types';
 import { sanitizeHtml, transformApiJsonToFormData } from './utils';
 // 导入模拟分析过程函数
 import { simulateAnalysisProcess } from './mockAnalysis';
+import { jsonrepair } from 'jsonrepair';
 
 /**
  * 处理API响应流
@@ -138,7 +139,8 @@ export const processStream = async (
                   updateFormData(data.json_complete, false, true);
                 } else if (typeof data.json_complete === 'string' && data.json_complete.trim()) {
                   try {
-                    const parsedJson = JSON.parse(data.json_complete);
+                    let repairedJson = jsonrepair(data.json_complete);
+                    const parsedJson = JSON.parse(repairedJson);
                     updateFormData(parsedJson, false, true);
                   } catch (jsonError) {
                     console.error('❌ 无法解析完整JSON结构:', jsonError);
