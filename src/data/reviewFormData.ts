@@ -14,7 +14,7 @@ export const reviewFormData = {
   evaluationSections: [
     {
       id: "applicantQualification",
-      title: "你对申请的内容",
+      title: "Agent熟悉程度",
       options: ["熟悉", "较熟", "不熟悉"],
       required: true,
       aiRecommendation: "",
