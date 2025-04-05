@@ -411,15 +411,15 @@ export const startAnalysisWithBackend = async (
       setIsWaitingForResponse(false);
       
       // 运行模拟分析过程
-      await simulateAnalysisProcess(
-        addAnalysisLog,
-        setProgress,
-        setStatusMessage,
-        updateLogContent,
-        setReasoningText,
-        setFinalContent,
-        setJsonStructure
-      );
+      // await simulateAnalysisProcess(
+      //   addAnalysisLog,
+      //   setProgress
+      //   // setStatusMessage,
+      //   // updateLogContent,
+      //   // setReasoningText,
+      //   // setFinalContent,
+      //   // setJsonStructure
+      // );
       
       // 模拟分析完成后，设置JSON完成状态为true
       setJsonCompleteStatus(true);
