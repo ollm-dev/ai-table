@@ -449,34 +449,34 @@ export default function AnalysisLogPanel({
           });
       }, [formattedJson]);
       
-      // 手动应用JSON数据
-      const handleManualApply = useCallback(() => {
-        if (!jsonStructure || !onApplyJsonStructure) return;
+      // // 手动应用JSON数据
+      // const handleManualApply = useCallback(() => {
+      //   if (!jsonStructure || !onApplyJsonStructure) return;
         
-        try {
-          console.log('手动应用JSON数据，数据长度:', jsonStructure.length);
-          onApplyJsonStructure(jsonStructure);
+      //   try {
+      //     console.log('手动应用JSON数据，数据长度:', jsonStructure.length);
+      //     onApplyJsonStructure(jsonStructure);
           
-          // 更新已应用的JSON引用
-          lastAppliedJsonRef.current = jsonStructure;
+      //     // 更新已应用的JSON引用
+      //     lastAppliedJsonRef.current = jsonStructure;
           
-          toast.success('已手动应用AI数据', {
-            description: '评审表单已根据AI分析结果填充',
-            duration: 3000
-          });
+      //     toast.success('已手动应用AI数据', {
+      //       description: '评审表单已根据AI分析结果填充',
+      //       duration: 3000
+      //     });
           
-          setShowFillSuccess(true);
-          setTimeout(() => setShowFillSuccess(false), 3000);
+      //     setShowFillSuccess(true);
+      //     setTimeout(() => setShowFillSuccess(false), 3000);
           
-          console.log('手动应用JSON完成');
-        } catch (error) {
-          toast.error('手动应用失败', {
-            description: error instanceof Error ? error.message : '未知错误',
-            duration: 5000
-          });
-          console.error('手动应用JSON时出错:', error);
-        }
-      }, [jsonStructure, onApplyJsonStructure]);
+      //     console.log('手动应用JSON完成');
+      //   } catch (error) {
+      //     toast.error('手动应用失败', {
+      //       description: error instanceof Error ? error.message : '未知错误',
+      //       duration: 5000
+      //     });
+      //     console.error('手动应用JSON时出错:', error);
+      //   }
+      // }, [jsonStructure, onApplyJsonStructure]);
 
       if (!jsonStructure) {
         return (
@@ -484,17 +484,18 @@ export default function AnalysisLogPanel({
             <div className="text-center">
               <div className="flex justify-center mb-4">
                 <div className="relative">
-                  <div className="relative rounded-full h-8 w-8 bg-gray-300 flex items-center justify-center">
+                  <div className="animate-ping absolute h-8 w-8 rounded-full bg-primary-200 opacity-75"></div>
+                  <div className="relative rounded-full h-8 w-8 bg-primary-500 flex items-center justify-center">
                     <span className="text-white text-lg">⋯</span>
                   </div>
                 </div>
               </div>
               <p className="text-gray-600">
-                暂无可用的AI自动填充数据
+                暂无AI自动填充数据
                 {isAnalyzing && '，正在生成中...'}
               </p>
             </div>
-          </div>
+        </div>
         );
       }
 

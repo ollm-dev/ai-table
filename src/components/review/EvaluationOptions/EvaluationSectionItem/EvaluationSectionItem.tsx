@@ -49,11 +49,13 @@ export default function EvaluationSectionItem({
           {aiRecommendationsAvailable && showEvaluationAI && section.aiRecommendation ? (
             <div className="flex flex-col p-3 bg-gray-50/80 rounded-xl border border-gray-100 w-full">
               <div className="flex items-center">
-                <span className="text-gray-600 mr-3 font-medium">AI建议:</span>
+                <span className="text-gray-600 mr-3 font-medium">
+                  {section.id === 'applicantQualification' ? '熟悉度' :'AI建议' }
+                </span>
                 <Badge className={`${
-                  section.id === 'maturity' && section.aiRecommendation === '熟悉' ? 'bg-green-100 text-green-700 border-green-300' :
-                  section.id === 'rating' && section.aiRecommendation === '优' ? 'bg-blue-100 text-blue-700 border-blue-300' :
-                  section.id === 'funding' && section.aiRecommendation === '优先资助' ? 'bg-purple-100 text-purple-700 border-purple-300' :
+                  section.id === 'applicantQualification' ? 'bg-green-100 text-green-700 border-green-300' :
+                  section.id === 'significance' ? 'bg-blue-100 text-blue-700 border-blue-300' :
+                  section.id === 'relationshipExplanation' ? 'bg-purple-100 text-purple-700 border-purple-300' :
                   'bg-gray-100 text-gray-700 border-gray-300'
                 } border px-4 py-1 rounded-full transition-colors`}>
                   {section.aiRecommendation}
