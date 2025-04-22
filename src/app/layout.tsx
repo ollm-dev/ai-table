@@ -46,7 +46,7 @@ export default function RootLayout({
           <footer className="mt-auto py-8 text-center">
             <div className="elegant-divider max-w-2xl mx-auto mb-6"></div>
             <p className="text-gray-500 text-sm font-medium tracking-wide">
-              © {new Date().getFullYear()} DeepInsight 智能项目评审平台
+              © {new Date().getFullYear()} 2025 DeepInsight Intelligent Project Review Platform
             </p>
           </footer>
         </div>

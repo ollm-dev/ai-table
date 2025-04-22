@@ -1,8 +1,8 @@
 /**
- * @typedef {Object} ReviewFormData - 评审表单数据结构
+ * @typedef {Object} ReviewFormData - Review form data structure
  */
 export const reviewFormData = {
-  formTitle: "评审意见表",  
+  formTitle: "Review Opinion Form",  
   projectInfo: {
     projectTitle: "",
     projectType: "",
@@ -14,25 +14,25 @@ export const reviewFormData = {
   evaluationSections: [
     {
       id: "applicantQualification",
-      title: "Agent熟悉程度",
-      options: ["熟悉", "较熟", "不熟悉"],
+      title: "Agent Familiarity",
+      options: ["Familiar", "Somewhat Familiar", "Not Familiar"],
       required: true,
       aiRecommendation: "",
       aiReason: ""
     },
     {
       id: "significance",
-      title: "综合评价",
-      options: ["优", "良", "中", "差"],
+      title: "Overall Evaluation",
+      options: ["Excellent", "Good", "Average", "Poor"],
       required: true,
       aiRecommendation: "",
       aiReason: ""
     },
     {
       id: "relationshipExplanation",
-      title: "资助意见",
-      description: "请选择适当的关系描述",
-      options: ["优先资助", "可资", "不予资助"],
+      title: "Funding Opinion",
+      description: "Please select the appropriate relationship description",
+      options: ["Priority Funding", "Fundable", "Not Recommended for Funding"],
       required: true,
       aiRecommendation: "",
       aiReason: ""
@@ -42,40 +42,40 @@ export const reviewFormData = {
   textualEvaluations: [
     {
       id: "scientificValue",
-      title: "科学评价说明",
-      placeholder: "请输入科学评价说明",
+      title: "Scientific Evaluation Description",
+      placeholder: "Please enter scientific evaluation description",
       required: true,
       aiRecommendation: "",
       minLength: 800
     },
     {
       id: "socialDevelopment",
-      title: "请详述该申请项目是否符合经济社会发展需求或科学前沿的重要科学问题？",
-      placeholder: "请输入评价意见",
+      title: "Does the project meet economic and social development needs or address important scientific issues at the frontier of science?",
+      placeholder: "Please enter your evaluation opinion",
       required: true,
       aiRecommendation: "",
       minLength: 800
     },
     {
       id: "innovation",
-      title: "请评述申请项目所阐述的科学问题的创新性与预期成果的学术价值？",
-      placeholder: "请输入评价意见",
+      title: "Please evaluate the innovation of the scientific issues described in the application and the academic value of the expected results",
+      placeholder: "Please enter your evaluation opinion",
       required: true,
       aiRecommendation: "",
       minLength: 800
     },
     {
       id: "feasibility",
-      title: "请详述该申请项目的研究基础与可行性？如有可能，请对完善研究方案提出建议。",
-      placeholder: "请输入评价意见",
+      title: "Please detail the research foundation and feasibility of the project. If possible, please suggest improvements to the research plan.",
+      placeholder: "Please enter your evaluation opinion",
       required: true,
       aiRecommendation: "",
       minLength: 800
     },
     {
       id: "otherSuggestions",
-      title: "其他建议",
-      placeholder: "请输入其他建议",
+      title: "Other Suggestions",
+      placeholder: "Please enter other suggestions",
       required: false,
       aiRecommendation: "",
       minLength: 800

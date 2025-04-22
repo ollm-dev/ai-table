@@ -20,7 +20,7 @@ export default function EvaluationSectionItem({
             <h4 className="font-medium text-gray-800 text-sm">{section.title}</h4>
             {section.required && (
               <Badge variant="required" className="ml-2 bg-red-50 text-red-600 border border-red-100 text-xs">
-                必填
+                required
               </Badge>
             )}
           </div>
@@ -50,7 +50,7 @@ export default function EvaluationSectionItem({
             <div className="flex flex-col p-3 bg-gray-50/80 rounded-xl border border-gray-100 w-full">
               <div className="flex items-center">
                 <span className="text-gray-600 mr-3 font-medium">
-                  {section.id === 'applicantQualification' ? '熟悉度' :'AI建议' }
+                  {section.id === 'applicantQualification' ? 'familiarity' :'AI suggestions' }
                 </span>
                 <Badge className={`${
                   section.id === 'applicantQualification' ? 'bg-green-100 text-green-700 border-green-300' :

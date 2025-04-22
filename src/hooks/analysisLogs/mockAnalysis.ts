@@ -1,8 +1,8 @@
 /**
- * 模拟分析过程数据和函数
+ * Mock Analysis Process Data and Functions
  */
 
-// 定义分析流程步骤，与图片中的进度条对应
+// Define analysis process steps, corresponding to the progress bar in the image
 export interface AnalysisStep {
   id: string;
   name: string;
@@ -10,50 +10,50 @@ export interface AnalysisStep {
   progress: number;
 }
 
-// 模拟分析步骤数据
+// Mock analysis steps data
 export const ANALYSIS_STEPS: AnalysisStep[] = [
   {
     id: 'nlp',
-    name: '自然语言处理',
-    description: '分析文档结构和内容',
+    name: 'Natural Language Processing',
+    description: 'Analyzing document structure and content',
     progress: 100
   },
   {
     id: 'context',
-    name: '上下文分析',
-    description: '提取关键主张和假设',
+    name: 'Context Analysis',
+    description: 'Extracting key claims and assumptions',
     progress: 100
   },
   {
     id: 'data',
-    name: '元数据提取',
-    description: '识别研究方法与途径',
+    name: 'Metadata Extraction',
+    description: 'Identifying research methods and approaches',
     progress: 100
   },
   {
     id: 'evaluation',
-    name: '量化评估',
-    description: '根据标准学术标准评估',
+    name: 'Quantitative Assessment',
+    description: 'Evaluating against standard academic criteria',
     progress: 100
   },
   {
     id: 'visualization',
-    name: '可视化',
-    description: '生成洞见的视觉呈现',
+    name: 'Visualization',
+    description: 'Generating visual representation of insights',
     progress: 100
   },
   {
     id: 'summary',
-    name: '反馈综合',
-    description: '编译全面的评审反馈',
+    name: 'Feedback Synthesis',
+    description: 'Compiling comprehensive review feedback',
     progress: 100
   }
 ];
 
 /**
- * 模拟分析过程
- * @param filePath 文件路径
- * @param callbacks 分析过程回调函数集合
+ * Simulate analysis process
+ * @param filePath File path
+ * @param callbacks Analysis process callback functions collection
  * @returns Promise<void>
  */
 export const simulateAnalysisProcess = async (
@@ -82,97 +82,97 @@ export const simulateAnalysisProcess = async (
     setJsonCompleteStatus
   } = callbacks;
 
-  // 模拟分析流程
-  addAnalysisLog("开始模拟分析流程", "info");
+  // Simulate analysis process
+  addAnalysisLog("Starting mock analysis process", "info");
   
-  // 分析步骤总数，用于计算进度
+  // Total number of analysis steps, used for calculating progress
   const totalSteps = ANALYSIS_STEPS.length;
   
-  // 逐步执行每个分析步骤
+  // Execute each analysis step sequentially
   for (let i = 0; i < totalSteps; i++) {
     const step = ANALYSIS_STEPS[i];
     const progress = Math.round(((i + 1) / totalSteps) * 100);
     
     setProgress(progress);
-    setStatusMessage(`处理中: ${step.name} - ${step.description}`);
-    addAnalysisLog(`执行步骤: ${step.name} - ${step.description}`, "progress");
-    updateLogContent("progress", `正在执行: ${step.name}`);
+    setStatusMessage(`Processing: ${step.name} - ${step.description}`);
+    addAnalysisLog(`Executing step: ${step.name} - ${step.description}`, "progress");
+    updateLogContent("progress", `Currently executing: ${step.name}`);
     
-    // 模拟每个步骤的处理时间
+    // Simulate processing time for each step
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // 为不同步骤生成不同的模拟输出
+    // Generate different mock outputs for different steps
     switch (step.id) {
       case 'nlp':
-        setReasoningText("正在分析文档结构和提取关键内容...\n");
+        setReasoningText("Analyzing document structure and extracting key content...\n");
         break;
       case 'context':
-        setReasoningText(prev => prev + "识别文档中的主要论点和支持证据...\n");
+        setReasoningText(prev => prev + "Identifying main arguments and supporting evidence in the document...\n");
         break;
       case 'data':
-        setReasoningText(prev => prev + "提取研究方法、样本数据和实验设计...\n");
+        setReasoningText(prev => prev + "Extracting research methods, sample data, and experimental design...\n");
         break;
       case 'evaluation':
-        setReasoningText(prev => prev + "评估研究方法的有效性和结果的可靠性...\n");
+        setReasoningText(prev => prev + "Evaluating the effectiveness of research methods and reliability of results...\n");
         break;
       case 'visualization':
-        setReasoningText(prev => prev + "生成评审数据的可视化表示...\n");
+        setReasoningText(prev => prev + "Generating visual representation of review data...\n");
         break;
       case 'summary':
-        setReasoningText(prev => prev + "综合分析结果，形成最终评审意见...\n");
+        setReasoningText(prev => prev + "Synthesizing analysis results to form final review opinions...\n");
         
-        // 在最后一步生成模拟的JSON结构和最终内容
+        // Generate mock JSON structure and final content in the last step
         const mockJsonStructure = {
-          formTitle: "论文评审表",
+          formTitle: "Paper Review Form",
           projectInfo: {
-            title: "示例论文标题",
-            authors: "示例作者",
-            keywords: "示例关键词",
-            abstract: "这是一份模拟的论文摘要内容..."
+            title: "Example Paper Title",
+            authors: "Example Authors",
+            keywords: "Example Keywords",
+            abstract: "This is a mock paper abstract content..."
           },
           evaluationSections: [
             {
               id: "significance",
-              title: "研究意义",
-              options: ["优秀", "良好", "一般", "较差"],
-              selectedValue: "良好",
-              aiRecommendation: "良好",
-              aiReason: "该研究在当前领域有一定价值，但创新性不足"
+              title: "Research Significance",
+              options: ["Excellent", "Good", "Average", "Poor"],
+              selectedValue: "Good",
+              aiRecommendation: "Good",
+              aiReason: "The research has certain value in the current field, but lacks innovation"
             },
             {
               id: "methodology",
-              title: "研究方法",
-              options: ["优秀", "良好", "一般", "较差"],
-              selectedValue: "良好",
-              aiRecommendation: "良好",
-              aiReason: "研究方法合理，但样本量偏小"
+              title: "Research Methodology",
+              options: ["Excellent", "Good", "Average", "Poor"],
+              selectedValue: "Good",
+              aiRecommendation: "Good",
+              aiReason: "Research methodology is reasonable, but sample size is small"
             }
           ],
           textualEvaluations: [
             {
               id: "strengths",
-              title: "研究优势",
-              content: "1. 问题定义清晰\n2. 实验设计合理\n3. 数据分析方法适当"
+              title: "Research Strengths",
+              content: "1. Clear problem definition\n2. Reasonable experimental design\n3. Appropriate data analysis methods"
             },
             {
               id: "weaknesses",
-              title: "研究不足",
-              content: "1. 样本量偏小\n2. 未充分讨论研究局限性\n3. 部分结论缺乏足够支持"
+              title: "Research Weaknesses",
+              content: "1. Small sample size\n2. Insufficient discussion of research limitations\n3. Some conclusions lack sufficient support"
             }
           ]
         };
         
-        // 更新JSON结构
+        // Update JSON structure
         setJsonStructure(JSON.stringify(mockJsonStructure, null, 2));
         updateFormData(mockJsonStructure, false, true);
         setJsonCompleteStatus(true);
         
-        // 设置最终评审内容
-        setFinalContent("# 论文评审总结\n\n## 研究概述\n该研究探讨了一个有价值的问题，采用了适当的研究方法，但存在一些局限性。\n\n## 主要发现\n研究结果表明该方法在特定条件下有效，但需要进一步验证。\n\n## 建议\n建议增加样本量，并对研究局限性进行更深入的讨论。");
+        // Set final review content
+        setFinalContent("# Paper Review Summary\n\n## Research Overview\nThis research explores a valuable problem, employs appropriate research methods, but has some limitations.\n\n## Main Findings\nThe research results indicate that the method is effective under specific conditions, but further validation is needed.\n\n## Recommendations\nRecommend increasing the sample size and conducting a more in-depth discussion of research limitations.");
         break;
     }
   }
   
-  addAnalysisLog("模拟分析流程完成", "complete");
+  addAnalysisLog("Mock analysis process completed", "complete");
   return Promise.resolve();
 };

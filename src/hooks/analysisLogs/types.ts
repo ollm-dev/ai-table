@@ -20,7 +20,7 @@ export interface AnalysisLogEntry {
  * 空的表单数据结构
  */
 export const emptyFormData = {
-  formTitle: "评审意见表",
+  formTitle: "Review Opinion Form",
   projectInfo: {
     projectTitle: "",
     projectType: "",

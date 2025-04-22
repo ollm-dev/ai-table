@@ -4,26 +4,27 @@ import AnalysisLogPanel from "./AnalysisLogPanel/AnalysisLogPanel";
 import EvaluationSectionItem from "./EvaluationSectionItem/EvaluationSectionItem";
 
 /**
- * 评估选项部分组件
+ * Evaluation Options Section Component
  * 
- * 该组件负责渲染评估选项界面，包括评估部分的列表和分析日志面板用户在此界面可以配置评估选项，
- * 查看分析日志和进度，以及应用AI推荐的评估设置
+ * This component is responsible for rendering the evaluation options interface, including 
+ * the list of evaluation sections and the analysis log panel. Users can configure evaluation options,
+ * view analysis logs and progress, and apply AI-recommended evaluation settings.
  * 
- * @param {Object} props - 组件属性对象
- * @param {Array} props.evaluationSections - 评估部分列表
- * @param {Object} props.formState - 表单状态对象，包含评估选项的状态
- * @param {Function} props.handleRadioChange - 处理单选按钮变化的回调函数
- * @param {boolean} props.isAnalyzing - 是否正在执行实时分析
- * @param {File|null} props.pdfFile - 上传的PDF文件对象
- * @param {boolean} props.aiRecommendationsAvailable - AI推荐是否可用
- * @param {boolean} props.showEvaluationAI - 是否显示AI评估选项
- * @param {Array} props.analysisLogs - 分析日志列表
- * @param {number} props.progress - 分析进度百分比
- * @param {string} props.statusMessage - 状态消息
- * @param {Function} props.onApplyJsonStructure - 应用JSON结构的回调函数
- * @param {string} props.jsonStructure - JSON结构数据 
- * @param {boolean} props.jsonCompleteStatus - JSON结构是否完成
- * @param {Function} props.setJsonCompleteStatus - 设置JSON结构完成状态的回调函数
+ * @param {Object} props - Component properties
+ * @param {Array} props.evaluationSections - List of evaluation sections
+ * @param {Object} props.formState - Form state object containing evaluation options state
+ * @param {Function} props.handleRadioChange - Callback function for handling radio button changes
+ * @param {boolean} props.isAnalyzing - Whether real-time analysis is being performed
+ * @param {File|null} props.pdfFile - Uploaded PDF file object
+ * @param {boolean} props.aiRecommendationsAvailable - Whether AI recommendations are available
+ * @param {boolean} props.showEvaluationAI - Whether to show AI evaluation options
+ * @param {Array} props.analysisLogs - List of analysis logs
+ * @param {number} props.progress - Analysis progress percentage
+ * @param {string} props.statusMessage - Status message
+ * @param {Function} props.onApplyJsonStructure - Callback function for applying JSON structure
+ * @param {string} props.jsonStructure - JSON structure data
+ * @param {boolean} props.jsonCompleteStatus - Whether JSON structure is complete
+ * @param {Function} props.setJsonCompleteStatus - Callback function for setting JSON structure completion status
  */
 export function EvaluationOptionsSection({
   evaluationSections,
@@ -47,20 +48,20 @@ export function EvaluationOptionsSection({
       <div className="flex flex-col lg:flex-row gap-8">
         <div className="flex-1 order-2 lg:order-1 lg:w-2/5 lg:max-w-[40%]">
           <div className="bg-gradient-to-br from-white to-gray-50/50 rounded-2xl p-6 border border-gray-200 shadow-md hover:shadow-lg transition-all duration-500 backdrop-blur-sm relative overflow-hidden h-full">
-            {/* 顶部渐变条 */}
+            {/* Top gradient bar */}
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary-400 via-purple-500 to-primary-600 opacity-80"></div>
             
-            {/* 背景装饰 */}
+            {/* Background decoration */}
             <div className="absolute -right-20 -top-20 w-40 h-40 bg-primary-100/10 rounded-full blur-3xl"></div>
             <div className="absolute -left-20 -bottom-20 w-40 h-40 bg-purple-100/10 rounded-full blur-3xl"></div>
             
             <div className="flex flex-col">
               <h4 className="text-primary-600 font-medium mb-3 text-center flex items-center justify-center">
                 <span className="inline-block h-2 w-2 rounded-full bg-primary-500 mr-2 animate-pulse"></span>
-                <span className="gradient-text text-lg font-semibold">评估选项</span>
+                <span className="gradient-text text-lg font-semibold">Evaluation Options</span>
                 {isAnalyzing && (
                   <span className="ml-2 text-xs px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full animate-pulse">
-                    实时分析中...
+                    Analyzing...
                   </span>
                 )}
               </h4>

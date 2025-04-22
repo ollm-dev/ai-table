@@ -63,7 +63,7 @@ export const transformApiJsonToFormData = (apiJson: any): any => {
     if (!apiJson) {
       console.warn('⚠️ 接收到空数据');
       return {
-        formTitle: "评审意见表",
+        formTitle: "Review Opinion Form",
         projectInfo: { ...reviewFormData.projectInfo },
         evaluationSections: [...reviewFormData.evaluationSections],
         textualEvaluations: [...reviewFormData.textualEvaluations]
@@ -78,7 +78,7 @@ export const transformApiJsonToFormData = (apiJson: any): any => {
     
     // 初始化结果对象
     const formData = {
-      formTitle: "评审意见表",
+      formTitle: "Review Opinion Form",
       projectInfo: { ...reviewFormData.projectInfo },
       evaluationSections: [...reviewFormData.evaluationSections],
       textualEvaluations: [...reviewFormData.textualEvaluations]
@@ -248,7 +248,7 @@ export const transformApiJsonToFormData = (apiJson: any): any => {
     console.error('❌ 转换API JSON时出错:', error);
     // 出错时返回备用数据结构
     return {
-      formTitle: "评审意见表 (数据恢复模式)",
+      formTitle: "Review Opinion Form (数据恢复模式)",
       projectInfo: { ...reviewFormData.projectInfo },
       evaluationSections: [...reviewFormData.evaluationSections],
       textualEvaluations: [...reviewFormData.textualEvaluations]

@@ -21,43 +21,43 @@ export default function AnalysisLogPanel({
     const [activeTab, setActiveTab] = useState<'reasoning' | 'content' | 'json_structure'>('reasoning');
     const logContainerRef = useRef<HTMLDivElement>(null);
     const scrollTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-    // 默认不自动滚动，让用户有完全的控制权
+    // Default to no auto-scroll, giving users full control
     const [autoScroll, setAutoScroll] = useState(false);
     const [showFillSuccess, setShowFillSuccess] = useState(false);
-    const [hasAppliedJson, setHasAppliedJson] = useState(false); // 跟踪是否已应用JSON
-    // 添加一个ref来存储上一次应用的JSON结构
+    const [hasAppliedJson, setHasAppliedJson] = useState(false); // Track if JSON has been applied
+    // Add a ref to store the last applied JSON structure
     const lastAppliedJsonRef = useRef<string | null>(null);
-    // 添加JSON长度来判断内容是否发生变化
+    // Add JSON length to determine if content has changed
     const lastJsonLengthRef = useRef<number>(0);
 
     const userScrolledRef = useRef(false);
     const scrollPositionRef = useRef(0);
     const hasHandledScrollRef = useRef(false);
     const isHandlingScrollRef = useRef(false);
-    // 默认不进行初始滚动，组件初始加载时不会自动滚动到底部
+    // Default to no initial scroll, component won't auto-scroll to bottom on initial load
     const needsInitialScrollRef = useRef(false);
   
-    // 定义标签选项
+    // Define tab options
     const tabOptions = [
       { 
         value: 'reasoning' as const, 
-        label: '推理过程', 
+        label: 'Reasoning Process', 
         icon: '🤔' 
       },
       { 
         value: 'content' as const, 
-        label: '评审结果', 
+        label: 'Review Results', 
         icon: '📝' 
       },
       { 
         value: 'json_structure' as const, 
-        label: 'AI填充', 
+        label: 'AI Filling', 
         icon: '🔍',
         badge: !!jsonStructure
       }
     ];
   
-    // 处理滚动事件
+    // Handle scroll events
     const handleScroll = useCallback(() => {
       if (isHandlingScrollRef.current) return;
       isHandlingScrollRef.current = true;
@@ -78,7 +78,7 @@ export default function AnalysisLogPanel({
       }, 100);
     }, []);
   
-    // 添加滚动事件监听
+    // Add scroll event listener
     useEffect(() => {
       const container = logContainerRef.current;
       if (container) {
@@ -87,17 +87,17 @@ export default function AnalysisLogPanel({
       }
     }, [handleScroll]);
   
-    // 处理初始滚动 - 修改为不自动滚动到底部
+    // Handle initial scroll - modified to not auto-scroll to bottom
     useEffect(() => {
-      // 移除自动滚动到底部的逻辑，让用户自己控制滚动位置
+      // Remove auto-scroll to bottom logic, let users control scroll position
       needsInitialScrollRef.current = false;
     }, [activeTab]);
   
-    // 自动滚动到底部 - 仅当内容更新且用户手动滚动到底部时才滚动
+    // Auto-scroll to bottom - only when content updates and user has manually scrolled to bottom
     useEffect(() => {
-      // 只有当用户已滚动到底部（autoScroll为true）时才启用自动滚动
+      // Only enable auto-scroll when user has scrolled to bottom (autoScroll is true)
       if (autoScroll && logContainerRef.current && analysisLogs.length > 0) {
-        // 使用防抖，减少频繁滚动
+        // Use debounce to reduce frequent scrolling
         if (scrollTimerRef.current) {
           clearTimeout(scrollTimerRef.current);
         }
@@ -110,12 +110,12 @@ export default function AnalysisLogPanel({
       }
     }, [analysisLogs, autoScroll, isAnalyzing, activeTab, jsonStructure]);
     
-    // 当标签切换时保持用户的滚动偏好，不强制重置
+    // Maintain user's scroll preference when switching tabs, don't force reset
     useEffect(() => {
-      // 切换标签时不重置自动滚动状态，尊重用户的选择
-      needsInitialScrollRef.current = false; // 不进行自动初始滚动
+      // Don't reset auto-scroll state when switching tabs, respect user's choice
+      needsInitialScrollRef.current = false; // No automatic initial scrolling
       
-      // 如果用户之前已滚动到底部，切换标签后保持此状态
+      // If user was previously scrolled to bottom, maintain this state after tab switch
       const runAfterRender = setTimeout(() => {
         if (autoScroll && logContainerRef.current) {
           logContainerRef.current.scrollTop = logContainerRef.current.scrollHeight;
@@ -125,7 +125,7 @@ export default function AnalysisLogPanel({
       return () => clearTimeout(runAfterRender);
     }, [activeTab, autoScroll]);
   
-    // 缓存过滤后的日志
+    // Cache filtered logs
     const filteredLogs = useMemo(() => {
       return analysisLogs.filter(log => {
         switch (activeTab) {
@@ -141,12 +141,12 @@ export default function AnalysisLogPanel({
       });
     }, [analysisLogs, activeTab]);
   
-    // 添加CSS样式到文档头，确保markdown渲染的稳定性
+    // Add CSS styles to document head, ensuring markdown rendering stability
     useEffect(() => {
-      // 创建样式标签
+      // Create style tag
       const styleElement = document.createElement('style');
       styleElement.textContent = `
-        /* 固定行高和块级间距，防止抖动 */
+        /* Fixed line height and block spacing, prevents jumping */
         .markdown-content p, 
         .markdown-content li, 
         .markdown-content h1, 
@@ -163,7 +163,7 @@ export default function AnalysisLogPanel({
           contain: content !important;
         }
         
-        /* 预防内联元素引起的抖动 */
+        /* Prevent inline elements from causing jumping */
         .markdown-content code,
         .markdown-content em,
         .markdown-content strong {
@@ -172,14 +172,14 @@ export default function AnalysisLogPanel({
           transform: translateZ(0) !important;
         }
         
-        /* 确保表格不会导致布局抖动 */
+        /* Ensure tables don't cause layout jumping */
         .markdown-content table {
           table-layout: fixed !important;
           width: 100% !important;
           transform: translateZ(0) !important;
         }
   
-        /* 稳定流式渲染容器 */
+        /* Stable streaming rendering container */
         .stable-display-layer {
           position: relative !important;
           transform: translateZ(0) !important;
@@ -190,30 +190,30 @@ export default function AnalysisLogPanel({
           contain: paint layout style !important;
         }
         
-        /* 防止滚动时的内容抖动 */
+        /* Prevent content jumping during scrolling */
         #log-container {
           overscroll-behavior: contain !important;
           scroll-padding: 8px !important;
         }
         
-        /* 优化流式文本渲染性能 */
+        /* Optimize streaming text rendering performance */
         .stream-log {
           contain: content !important;
           page-break-inside: avoid !important;
         }
         
-        /* 用于平滑过渡的动画 */
+        /* Animation for smooth transitions */
         @keyframes smoothFadeIn {
           from { opacity: 0.85; }
           to { opacity: 1; }
         }
         
-        /* 应用平滑过渡效果 */
+        /* Apply smooth transition effects */
         .markdown-wrapper .render-target {
           animation: smoothFadeIn 0.3s ease-out !important;
         }
         
-        /* 进度条闪烁动画 - 较慢 */
+        /* Progress bar pulse animation - slower */
         @keyframes pulse-slow {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.8; }
@@ -223,7 +223,7 @@ export default function AnalysisLogPanel({
           animation: pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
         
-        /* 进度条闪光动画 */
+        /* Progress bar shimmer animation */
         @keyframes shimmer-fast {
           from { transform: translateX(-150%) skewX(-15deg); }
           to { transform: translateX(350%) skewX(-15deg); }
@@ -234,19 +234,19 @@ export default function AnalysisLogPanel({
         }
       `;
       
-      // 添加到head中
+      // Add to head
       document.head.appendChild(styleElement);
       
-      // 清理函数
+      // Cleanup function
       return () => {
         document.head.removeChild(styleElement);
         
-        // 清理所有定时器
+        // Clear all timers
         if (scrollTimerRef.current) {
           clearTimeout(scrollTimerRef.current);
         }
         
-        // 移除事件监听器
+        // Remove event listeners
         const logContainer = document.getElementById('log-container');
         if (logContainer) {
           logContainer.removeEventListener('scroll', handleScroll);
@@ -256,7 +256,7 @@ export default function AnalysisLogPanel({
   
    
   
-    // 手动滚动到底部
+    // Manually scroll to bottom
     const scrollToBottom = useCallback(() => {
       const container = logContainerRef.current;
       if (container) {
@@ -265,7 +265,7 @@ export default function AnalysisLogPanel({
         userScrolledRef.current = false;
       }
       
-      // 如果是AI填充标签页，也滚动JSON容器
+      // If on AI filling tab, also scroll JSON container
       if (activeTab === 'json_structure') {
         const jsonContainer = document.querySelector('.json-container');
         if (jsonContainer) {
@@ -274,26 +274,26 @@ export default function AnalysisLogPanel({
       }
     }, [activeTab]);
   
-    // 添加一个固定字符计数算法，避免过长内容导致的布局抖动
+    // Add a fixed character count algorithm to avoid layout jumping caused by long content
     function getStableDisplayContent(content: string): string {
-      // 如果内容为空直接返回
+      // Return directly if content is empty
       if (!content) return '';
-      // 对于长度大于某个值的内容，不做特殊处理
-      // 在这里假设大于1000字符的内容已经足够长，不会引起明显抖动
+      // For content longer than a certain value, no special processing
+      // Here we assume content longer than 1000 characters is long enough not to cause obvious jumping
       if (content.length > 100) return content;
       
-      // 对于短内容，返回原始内容，不再添加隐藏的HTML标签
-      // 我们会在渲染组件时处理填充问题
+      // For short content, return original content without adding hidden HTML tags
+      // We'll handle padding issues when rendering the component
       return content;
     }
   
-    // 优化日志渲染
-    // 使用 React.memo 包裹 MemoizedMarkdown 组件
+    // Optimize log rendering
+    // Wrap MemoizedMarkdown component with React.memo
     const MemoizedMarkdownWrapper = React.memo(({ content }: { content: string }) => {
-      // 使用稳定内容算法预处理内容
+      // Preprocess content using stable content algorithm
       const stableContent = useMemo(() => getStableDisplayContent(content), [content]);
       
-      // 计算容器最小高度，确保短内容时也有一定高度
+      // Calculate container min height, ensuring sufficient height for short content
       const minHeight = content && content.length < 100 ? Math.max(24, content.length * 0.3) : 24;
       
       return (
@@ -308,7 +308,7 @@ export default function AnalysisLogPanel({
         </div>
       );
     }, (prevProps, nextProps) => {
-      // 简化比较函数，只比较内容是否完全相同
+      // Simplify comparison function, only compare if content is exactly the same
       return prevProps.content === nextProps.content;
     });
   
@@ -334,10 +334,10 @@ export default function AnalysisLogPanel({
               }`}
               style={{ 
                 animation: 'none',
-                willChange: 'transform', // 优化元素变换性能
-                contain: 'content', // 包含内部布局变化
-                lineHeight: '1.5', // 固定行高
-                minHeight: '24px', // 最小高度确保一致性
+                willChange: 'transform', // Optimize element transformation performance
+                contain: 'content', // Contain internal layout changes
+                lineHeight: '1.5', // Fixed line height
+                minHeight: '24px', // Minimum height for consistency
                 position: 'relative',
                 transform: 'translateZ(0)',
                 backfaceVisibility: 'hidden'
@@ -366,76 +366,76 @@ export default function AnalysisLogPanel({
         });
       }, [filteredLogs]);
   
-      // 添加一个稳定的包装容器，避免整体高度变化导致闪动
+      // Add a stable wrapper container to avoid flickering caused by overall height changes
       return (
         <div className="stable-log-container" style={{ 
           minHeight: '100%', 
           position: 'relative',
-          transform: 'translateZ(0)', // 强制硬件加速
-          willChange: 'transform',    // 优化变换性能
-          contain: 'paint layout',    // 限制重绘和重排范围
+          transform: 'translateZ(0)', // Force hardware acceleration
+          willChange: 'transform',    // Optimize transformation performance
+          contain: 'paint layout',    // Limit repainting and reflow scope
           backfaceVisibility: 'hidden',
-          isolation: 'isolate'        // 创建新的层叠上下文
+          isolation: 'isolate'        // Create new stacking context
         }}>
           {memoizedLogs}
         </div>
       );
     };
   
-    // JSON标签页内容渲染器
+    // JSON tab content renderer
     const JsonTabContent = () => {
       const [copied, setCopied] = useState(false);
       const jsonContainerRef = useRef<HTMLDivElement>(null);
       
-      // 使用 useEffect 确保 JsonTabContent 组件的滚动行为与其他标签页一致
+      // Use useEffect to ensure JsonTabContent component's scrolling behavior is consistent with other tabs
       useEffect(() => {
         const jsonContainer = jsonContainerRef.current;
         if (!jsonContainer) return;
         
-        // 定义滚动处理函数
+        // Define scroll handler
         const handleJsonScroll = (e: Event) => {
           e.stopPropagation();
           
           if (!jsonContainer) return;
           
-          // 检查是否在底部
+          // Check if at bottom
           const isAtBottom = jsonContainer.scrollHeight - jsonContainer.scrollTop - jsonContainer.clientHeight < 30;
           
-          // 更新滚动状态
+          // Update scroll state
           userScrolledRef.current = !isAtBottom;
           setAutoScroll(isAtBottom);
         };
         
-        // 添加事件监听器
+        // Add event listener
         jsonContainer.addEventListener('scroll', handleJsonScroll);
         
-        // 清理函数
+        // Cleanup function
         return () => {
           jsonContainer.removeEventListener('scroll', handleJsonScroll);
         };
       }, []);
       
-      // 使JSON容器在内容变化时检查自动滚动状态
+      // Make JSON container check auto-scroll state when content changes
       useEffect(() => {
         if (autoScroll && jsonContainerRef.current && jsonStructure) {
           jsonContainerRef.current.scrollTop = jsonContainerRef.current.scrollHeight;
         }
       }, [jsonStructure, autoScroll]);
       
-      // 格式化JSON字符串
+      // Format JSON string
       const formattedJson = useMemo(() => {
         if (!jsonStructure) return '';
         try {
-          // 尝试解析JSON字符串并格式化
+          // Try to parse JSON string and format
           const parsedJson = JSON.parse(jsonStructure);
           return JSON.stringify(parsedJson, null, 2);
         } catch (e) {
-          // 如果无法解析为JSON，返回原始字符串
+          // If unable to parse as JSON, return original string
           return jsonStructure;
         }
       }, [jsonStructure]);
       
-      // 复制JSON到剪贴板
+      // Copy JSON to clipboard
       const copyToClipboard = useCallback(() => {
         if (!formattedJson) return;
         
@@ -445,36 +445,36 @@ export default function AnalysisLogPanel({
             setTimeout(() => setCopied(false), 2000);
           })
           .catch(err => {
-            console.error('无法复制到剪贴板:', err);
+            console.error('Unable to copy to clipboard:', err);
           });
       }, [formattedJson]);
       
-      // // 手动应用JSON数据
+      // // Manually apply JSON data
       // const handleManualApply = useCallback(() => {
       //   if (!jsonStructure || !onApplyJsonStructure) return;
         
       //   try {
-      //     console.log('手动应用JSON数据，数据长度:', jsonStructure.length);
+      //     console.log('Manually applying JSON data, data length:', jsonStructure.length);
       //     onApplyJsonStructure(jsonStructure);
           
-      //     // 更新已应用的JSON引用
+      //     // Update applied JSON reference
       //     lastAppliedJsonRef.current = jsonStructure;
           
-      //     toast.success('已手动应用AI数据', {
-      //       description: '评审表单已根据AI分析结果填充',
+      //     toast.success('AI data manually applied', {
+      //       description: 'Review form has been filled based on AI analysis results',
       //       duration: 3000
       //     });
           
       //     setShowFillSuccess(true);
       //     setTimeout(() => setShowFillSuccess(false), 3000);
           
-      //     console.log('手动应用JSON完成');
+      //     console.log('Manual JSON application completed');
       //   } catch (error) {
-      //     toast.error('手动应用失败', {
-      //       description: error instanceof Error ? error.message : '未知错误',
+      //     toast.error('Manual application failed', {
+      //       description: error instanceof Error ? error.message : 'Unknown error',
       //       duration: 5000
       //     });
-      //     console.error('手动应用JSON时出错:', error);
+      //     console.error('Error applying JSON manually:', error);
       //   }
       // }, [jsonStructure, onApplyJsonStructure]);
 
@@ -491,8 +491,8 @@ export default function AnalysisLogPanel({
                 </div>
               </div>
               <p className="text-gray-600">
-                暂无AI自动填充数据
-                {isAnalyzing && '，正在生成中...'}
+                No AI auto-fill data yet
+                {isAnalyzing && ', generating...'}
               </p>
             </div>
         </div>
@@ -505,7 +505,7 @@ export default function AnalysisLogPanel({
             ref={jsonContainerRef}
             className="flex-1 overflow-auto mb-4 bg-gray-50 p-3 rounded-lg border border-gray-200 relative stable-height-container json-container" 
             style={{
-              height: '400px', // 固定高度，防止抖动
+              height: '400px', // Fixed height to prevent jumping
               position: 'relative',
               transform: 'translateZ(0)',
               willChange: 'transform',
@@ -527,14 +527,14 @@ export default function AnalysisLogPanel({
                 type="button"
                 onClick={copyToClipboard}
                 className="p-1.5 bg-white rounded-md border border-gray-200 hover:bg-gray-50 transition-colors"
-                title="复制JSON"
+                title="Copy JSON"
               >
                 {copied ? (
                   <span className="text-green-600 text-xs font-medium flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <polyline points="20 6 9 17 4 12"></polyline>
                     </svg>
-                    <span className="ml-1">已复制</span>
+                    <span className="ml-1">Copied</span>
                   </span>
                 ) : (
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -549,59 +549,59 @@ export default function AnalysisLogPanel({
       );
     };
   
-    // 当JSON结构变化时，标记为完成状态
+    // Mark as complete when JSON structure changes
     // useEffect(() => {
     //   if (jsonCompleteStatus) {
     //     setJsonCompleteStatus(true);
     //   }
     // }, [jsonCompleteStatus]);
 
-    // 分离为单独的useEffect，专门处理JSON应用
+    // Separate into dedicated useEffect for handling JSON application
     
     
     
     
     useEffect(() => {
-      // 只有当JSON已完成且标记为需要应用时才执行
+      // Only execute when JSON is complete and marked for application
         if (!jsonStructure || !onApplyJsonStructure || !jsonCompleteStatus) {
         return;
       }
 
-      console.log('[自动应用] 开始应用JSON...');
-      console.log('[自动应用] JSON长度:', jsonStructure.length);
+      console.log('[Auto Apply] Starting to apply JSON...');
+      console.log('[Auto Apply] JSON length:', jsonStructure.length);
       
       try {
-        // 先显示Toast，让用户知道正在应用
-        toast.info('正在应用AI分析数据...', { duration: 1500 });
+        // Show Toast first to let user know application is in progress
+        toast.info('Applying AI analysis data...', { duration: 1500 });
         
-        // 直接调用应用函数
+        // Directly call apply function
         onApplyJsonStructure(jsonStructure);
         
-        // 更新已应用的JSON引用
+        // Update applied JSON reference
         lastAppliedJsonRef.current = jsonStructure;
         
-        // 重置完成状态，防止重复应用
+        // Reset completion status to prevent repeated application
         setJsonCompleteStatus(false);
         
-        // 显示成功提示
-        toast.success('AI数据已成功应用到表单', {
-          description: '评审表单已根据AI分析结果自动填充',
+        // Show success notification
+        toast.success('AI data successfully applied to form', {
+          description: 'Review form has been auto-filled based on AI analysis results',
           duration: 4000
         });
         
-        // 显示UI成功指示
+        // Show UI success indicator
         setShowFillSuccess(true);
         setTimeout(() => setShowFillSuccess(false), 3000);
         
-        console.log('[自动应用] 成功完成');
+        console.log('[Auto Apply] Successfully completed');
       } catch (error) {
-        toast.error('自动填充失败', {
-          description: error instanceof Error ? error.message : '未知错误',
+        toast.error('Auto-fill failed', {
+          description: error instanceof Error ? error.message : 'Unknown error',
           duration: 5000
         });
-        console.error('[自动应用] 出错:', error);
+        console.error('[Auto Apply] Error:', error);
         
-        // 即使出错也重置状态，避免无限重试
+        // Reset status even on error to avoid infinite retry
         setJsonCompleteStatus(false);
       }
     }, [jsonStructure, onApplyJsonStructure, setJsonCompleteStatus]);
@@ -616,15 +616,15 @@ export default function AnalysisLogPanel({
           <div className="flex flex-col">
             <h4 className="text-primary-600 font-medium mb-3 text-center flex items-center justify-center">
               <span className="inline-block h-2 w-2 rounded-full bg-primary-500 mr-2 animate-pulse"></span>
-              <span className="gradient-text text-lg font-semibold">AI分析引擎思考过程</span>
+              <span className="gradient-text text-lg font-semibold">AI Analysis Engine Thinking Process</span>
               {isAnalyzing && (
                 <span className="ml-2 text-xs px-2 py-0.5 bg-primary-100 text-primary-700 rounded-full animate-pulse">
-                  实时分析中...
+                  Analyzing...
                 </span>
               )}
             </h4>
             
-            {/* 标签切换按钮 */}
+            {/* Tab switch buttons */}
             <div className="flex justify-between mb-3">
               <div className="flex space-x-1">
                 {tabOptions.map((option) => (
@@ -644,14 +644,14 @@ export default function AnalysisLogPanel({
               </div>
             </div>
             
-            {/* AI分析流程组件 - 在进度条上方显示 */}
+            {/* AI analysis flow component - display above progress bar */}
             {isAnalyzing && (
               <div className="mb-3">
                 <AIProcessFlow progress={progress} />
               </div>
             )}
             
-            {/* 进度条 */}
+            {/* Progress bar */}
             {isAnalyzing && progress > 0 && (
               <div className="mb-3">
                 <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden shadow-inner">
@@ -663,7 +663,7 @@ export default function AnalysisLogPanel({
                       boxShadow: 'inset 0 0 5px rgba(255, 255, 255, 0.5)' 
                     }}
                   >
-                    {/* 进度条活动指示器 */}
+                    {/* Progress bar activity indicator */}
                     {progress < 100 && progress > 5 && (
                       <div className="h-full w-[10%] absolute right-0 top-0 bg-white opacity-30 animate-shimmer-fast"
                            style={{ transform: 'skewX(-15deg)' }}></div>
@@ -675,32 +675,32 @@ export default function AnalysisLogPanel({
                   <p className="text-xs text-gray-500 text-center flex-1">{statusMessage}</p>
                   <div className="text-xs text-gray-400 flex items-center">
                     <span className={`mr-1 inline-block h-1.5 w-1.5 rounded-full ${progress < 100 ? 'bg-primary-400 animate-pulse' : 'bg-green-500'}`}></span>
-                    <span>{progress < 100 ? '处理中' : '完成'}</span>
+                    <span>{progress < 100 ? 'Processing' : 'Completed'}</span>
                   </div>
                 </div>
               </div>
             )}
             
-            {/* 分析日志区域 */}
+            {/* Analysis logs area */}
             <div className="relative">
               <div 
                 id="log-container"
                 ref={logContainerRef}
                 className="flex-1 bg-white p-5 rounded-xl text-sm shadow-inner border border-gray-200 stable-height-container" 
                 style={{ 
-                  height: activeTab === 'json_structure' ? '500px' : '480px', // 为 JSON 标签页提供足够空间
+                  height: activeTab === 'json_structure' ? '500px' : '480px', // Provide enough space for JSON tab
                   overflowY: 'auto',
                   overscrollBehavior: 'contain',
                   scrollbarWidth: 'thin',
                   scrollbarColor: '#cbd5e0 #f7fafc',
                   position: 'relative',
                   fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
-                  // 性能优化属性
+                  // Performance optimization properties
                   containIntrinsicSize: '0 480px',
                   willChange: 'transform',
                   transform: 'translateZ(0)',
                   backfaceVisibility: 'hidden',
-                  // 新增：初始滚动位置在底部
+                  // New: initial scroll position at bottom
                   scrollBehavior: 'smooth'
                 }}
               >
@@ -709,7 +709,7 @@ export default function AnalysisLogPanel({
                     {pdfFile ? (
                       <>
                         <div className="animate-spin h-10 w-10 border-3 border-primary-500 border-t-transparent rounded-full mb-4"></div>
-                        <p className="font-medium">准备开始分析...</p>
+                        <p className="font-medium">Preparing to start analysis...</p>
                       </>
                     ) : (
                       <>
@@ -721,8 +721,8 @@ export default function AnalysisLogPanel({
                             </span>
                           </div>
                         </div>
-                        <p className="mt-4 font-medium text-gray-700">请先上传PDF文件开始分析</p>
-                        <p className="mt-1 text-xs text-gray-500">支持10MB以内的PDF文件</p>
+                        <p className="mt-4 font-medium text-gray-700">Please upload a PDF file to start analysis</p>
+                        <p className="mt-1 text-xs text-gray-500">Supports PDF files under 10MB</p>
                       </>
                     )}
                   </div>
@@ -749,8 +749,8 @@ export default function AnalysisLogPanel({
                               </div>
                             </div>
                             <p className="text-gray-600">
-                              {activeTab === 'reasoning' ? '暂无推理过程' : '暂无评审结果'}
-                              {isAnalyzing && '，正在生成中...'}
+                              {activeTab === 'reasoning' ? 'No reasoning process yet' : 'No review results yet'}
+                              {isAnalyzing && ', generating...'}
                             </p>
                           </div>
                         </div>
@@ -760,27 +760,27 @@ export default function AnalysisLogPanel({
                 )}
               </div>
               
-              {/* 滚动控制按钮 - 专用于AI填充标签页 */}
+              {/* Scroll control buttons - dedicated to AI filling tab */}
               {activeTab === 'json_structure' && (
                 <div className="absolute bottom-5 right-5 z-20 flex space-x-2">
                   <button
                     type="button"
                     onClick={scrollToBottom}
                     className="bg-gray-100 hover:bg-gray-200 text-gray-700 p-2 rounded-full transition-colors shadow-md"
-                    aria-label="滚动到底部"
+                    aria-label="Scroll to bottom"
                   >
                     <span>▼</span>
                   </button>
                 </div>
               )}
 
-              {/* 滚动控制按钮 - 不再区分标签页，统一逻辑 */}
+              {/* Scroll control buttons - no longer differentiated by tab, unified logic */}
               {!autoScroll && activeTab !== 'json_structure' && (
                 <button
                   type="button"
                   onClick={scrollToBottom}
                   className="absolute bottom-4 right-4 bg-white bg-opacity-90 p-2.5 rounded-full shadow-md hover:shadow-lg border border-gray-200 transition-all duration-300 hover:bg-primary-50 z-10"
-                  aria-label="滚动到底部"
+                  aria-label="Scroll to bottom"
                 >
                   <svg 
                     xmlns="http://www.w3.org/2000/svg" 

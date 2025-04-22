@@ -21,11 +21,11 @@ export default function Home() {
           </div>
           
           <h1 className="elegant-title text-6xl mb-8 animate-gentle-slide-up">
-            项目评审系统
+              Project Review System
           </h1>
           
           <p className="text-xl text-gray-600 max-w-2xl mx-auto animate-gentle-fade-in tracking-wide" style={{ animationDelay: '0.2s' }}>
-            DeepInsight 智能项目评审平台 · 基于AI的科研项目智能评估工具
+            DeepInsight Intelligent Project Review Platform · An AI-based Intelligent Evaluation Tool for Scientific Research Projects
           </p>
           
           {/* 装饰分割线 */}

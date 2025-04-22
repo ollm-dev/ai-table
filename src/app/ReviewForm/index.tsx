@@ -103,7 +103,7 @@ export default function ReviewForm({ data }: ReviewFormProps) {
     
     // 合并数据以确保结构完整性
     const mergedData: any = {
-      formTitle: updatedData.formTitle || current.formTitle || "评审意见表",
+      formTitle: updatedData.formTitle || current.formTitle || "Review Opinion Form",
       projectInfo: {
         ...(current.projectInfo || {}),
         ...(updatedData.projectInfo || {})
@@ -346,7 +346,7 @@ export default function ReviewForm({ data }: ReviewFormProps) {
         <div className="h-1 w-full bg-gradient-to-r from-primary-400 via-purple-500 to-primary-400 opacity-80"></div>
         
         <FormHeader 
-          formTitle={currentFormData?.formTitle || "评审意见表"} 
+          formTitle={currentFormData?.formTitle || "Review Opinion Form"} 
           pdfFile={pdfFile}
           fileInputRef={fileInputRef}
           handleFileChange={handleFileChange}

@@ -51,7 +51,7 @@ export function FormHeader({
               onClick={() => fileInputRef.current?.click()}
             >
               <UploadIcon className="h-5 w-5 mr-3 group-hover:animate-bounce-subtle" />
-              上传PDF文件
+              Upload PDF File
             </Button>
           ) : (
             <div className="flex items-center bg-white/80 px-6 py-3 rounded-full border border-primary-200 shadow-sm backdrop-blur-sm">
@@ -84,14 +84,14 @@ export function FormHeader({
                   {uploadSuccess ? (
                     <span className="flex items-center">
                       <CheckIcon className="h-4 w-4 mr-2" />
-                      已上传
+                      Uploaded
                     </span>
                   ) : waitingForAnalysis ? (
                     <span className="flex items-center">
                       <LoaderIcon className="h-4 w-4 mr-2 animate-spin" />
-                      准备分析中...
+                      Preparing analysis...
                     </span>
-                  ) : '确认上传'}
+                  ) : 'Confirm Upload'}
                 </Button>
               </div>
             </div>
@@ -102,11 +102,11 @@ export function FormHeader({
       {/* 只在有内容且没有错误时显示上传状态文本 */}
       {uploadStatusText && !uploadError && (
         <div className="mt-6 text-sm text-primary-600 bg-primary-50/50 backdrop-blur-sm p-4 rounded-xl border border-primary-100 animate-fadeIn">
-          <span className="font-medium">状态：</span>{uploadStatusText}
+          <span className="font-medium">Status: </span>{uploadStatusText}
           {waitingForAnalysis && (
             <span className="ml-2 inline-flex items-center">
               <LoaderIcon className="h-3 w-3 mr-2 animate-spin" />
-              等待后端处理中...
+              Waiting for backend processing...
             </span>
           )}
         </div>
@@ -115,7 +115,7 @@ export function FormHeader({
       {/* 显示上传错误信息 */}
       {uploadError && (
         <div className="mt-6 text-sm text-red-500 bg-red-50/50 backdrop-blur-sm p-4 rounded-xl border border-red-100 animate-fadeIn">
-          <span className="font-medium">错误：</span>{uploadError}
+          <span className="font-medium">Error: </span>{uploadError}
         </div>
       )}
     </CardHeader>
