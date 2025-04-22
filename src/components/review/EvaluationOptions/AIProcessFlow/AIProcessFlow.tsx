@@ -29,7 +29,7 @@ export function AIProcessFlow({ activeStep, progress }: AIProcessFlowProps) {
   return (
     <div className="w-full py-2">
       <h3 className="text-center text-primary-600 font-medium mb-3">
-        <span className="gradient-text font-semibold">AI分析流程</span>
+        <span className="gradient-text font-semibold">AI Analysis Process</span>
       </h3>
       
       <div className="grid gap-3">
