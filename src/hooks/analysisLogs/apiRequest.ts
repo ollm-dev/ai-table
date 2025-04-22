@@ -8,6 +8,7 @@ import { sanitizeHtml, transformApiJsonToFormData } from './utils';
 // 导入模拟分析过程函数
 import { simulateAnalysisProcess } from './mockAnalysis';
 import { jsonrepair } from 'jsonrepair';
+import { extractJsonFromCodeBlock } from './utils';
 
 /**
  * 处理API响应流
@@ -159,6 +160,16 @@ export const processStream = async (
 
             default:
               console.warn('⚠️ 未知消息类型:', data);
+              
+              // 检查原始消息是否包含```json格式的代码块
+              const rawMessageJson = extractJsonFromCodeBlock(message.slice(6).trim());
+              if (rawMessageJson) {
+                console.log('🎯 从原始消息中提取到JSON代码块:', rawMessageJson);
+                addAnalysisLog('从原始消息中提取到JSON代码块', 'json_extract');
+                updateFormData(rawMessageJson, false, true);
+                setJsonCompleteStatus(true);
+                break;
+              }
               
               // 尝试检测数据本身是否为 JSON 结构（非标准消息）
               if (data.formTitle || data.projectInfo || data.evaluationSections || data.textualEvaluations) {
@@ -413,12 +424,12 @@ export const startAnalysisWithBackend = async (
       // 运行模拟分析过程
       // await simulateAnalysisProcess(
       //   addAnalysisLog,
-      //   setProgress
-      //   // setStatusMessage,
-      //   // updateLogContent,
-      //   // setReasoningText,
-      //   // setFinalContent,
-      //   // setJsonStructure
+      //   setProgress,
+      //   setStatusMessage,
+      //   updateLogContent,
+      //   setReasoningText,
+      //   setFinalContent,
+      //   setJsonStructure
       // );
       
       // 模拟分析完成后，设置JSON完成状态为true

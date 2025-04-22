@@ -254,4 +254,62 @@ export const transformApiJsonToFormData = (apiJson: any): any => {
       textualEvaluations: [...reviewFormData.textualEvaluations]
     };
   }
+};
+
+/**
+ * 从带有```json标记的文本中提取JSON
+ * @param text 可能包含```json标记的文本
+ * @returns 提取出的JSON对象，如果提取失败则返回null
+ */
+export const extractJsonFromCodeBlock = (text: string): any | null => {
+  try {
+    if (!text) return null;
+    
+    // 查找```json开头和```结尾的代码块
+    const jsonRegex = /```json\s*([\s\S]*?)\s*```/;
+    const match = text.match(jsonRegex);
+    
+    if (match && match[1]) {
+      const jsonStr = match[1].trim();
+      console.log('🔍 从代码块中提取的JSON:', jsonStr);
+      
+      try {
+        // 尝试解析JSON
+        const jsonData = JSON.parse(jsonStr);
+        console.log('✅ 解析JSON成功:', jsonData);
+        return jsonData;
+      } catch (parseError) {
+        console.error('❌ 解析JSON出错:', parseError);
+        
+        // 尝试修复常见的JSON错误并重新解析
+        try {
+          // 使用jsonrepair库修复
+          const { jsonrepair } = require('jsonrepair');
+          const repairedJson = jsonrepair(jsonStr);
+          const jsonData = JSON.parse(repairedJson);
+          console.log('🔧 修复并解析JSON成功:', jsonData);
+          return jsonData;
+        } catch (repairError) {
+          console.error('❌ 修复JSON失败:', repairError);
+          return null;
+        }
+      }
+    } else {
+      // 如果找不到特定格式的JSON块，尝试直接作为JSON解析
+      try {
+        if (text.trim().startsWith('{') && text.trim().endsWith('}')) {
+          const jsonData = JSON.parse(text.trim());
+          console.log('✅ 将文本直接作为JSON解析成功:', jsonData);
+          return jsonData;
+        }
+      } catch (directParseError) {
+        console.log('⚠️ 将文本直接作为JSON解析失败');
+      }
+    }
+    
+    return null;
+  } catch (error) {
+    console.error('❌ 提取JSON时出错:', error);
+    return null;
+  }
 }; 

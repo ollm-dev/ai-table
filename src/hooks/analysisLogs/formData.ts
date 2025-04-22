@@ -6,15 +6,6 @@ import { reviewFormData } from '../../data/reviewFormData';
 import { emptyFormData, FormData } from './types';
 import { isEqual, transformApiJsonToFormData } from './utils';
 
-/**
- * 初始化表单结构
- * @param initialData 初始数据
- * @param formDataRef 表单数据引用
- * @param structureInitializedRef 结构初始化状态引用
- * @param setFormData 设置表单数据函数
- * @param dataUpdateCallbackRef 数据更新回调引用
- * @param addAnalysisLog 添加分析日志函数
- */
 export const initializeFormStructure = (
   initialData: any,
   formDataRef: React.MutableRefObject<FormData>,
@@ -74,19 +65,7 @@ export const initializeFormStructure = (
   }
 };
 
-/**
- * 更新表单数据
- * @param jsonStructure JSON 结构数据
- * @param isPartial 是否为部分更新
- * @param isComplete 是否为完整JSON（最终版本）
- * @param formDataRef 表单数据引用
- * @param lastUpdateTimeRef 最后更新时间引用
- * @param structureInitializedRef 结构初始化状态引用
- * @param setFormData 设置表单数据函数
- * @param dataUpdateCallbackRef 数据更新回调引用
- * @param initializeFormStructure 初始化表单结构函数
- * @param addAnalysisLog 添加分析日志函数
- */
+
 export const updateFormData = (
   jsonStructure: any,
   isPartial: boolean = false,
@@ -128,90 +107,90 @@ export const updateFormData = (
       } catch (parseError) {
         console.error('❌ JSON字符串解析失败，尝试修复格式问题:', parseError);
         
-        try {
-          // 增强的JSON修复逻辑
-          let fixedJsonStr = jsonStructure;
+        // try {
+        //   // 增强的JSON修复逻辑
+        //   let fixedJsonStr = jsonStructure;
           
-          // 1. 替换单引号为双引号
-          fixedJsonStr = fixedJsonStr.replace(/'/g, '"');
+        //   // 1. 替换单引号为双引号
+        //   fixedJsonStr = fixedJsonStr.replace(/'/g, '"');
           
-          // 2. 处理没有引号的属性名
-          fixedJsonStr = fixedJsonStr.replace(/([{,])\s*([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
+        //   // 2. 处理没有引号的属性名
+        //   fixedJsonStr = fixedJsonStr.replace(/([{,])\s*([a-zA-Z0-9_]+)\s*:/g, '$1"$2":');
           
-          // 3. 处理尾部多余的逗号
-          fixedJsonStr = fixedJsonStr.replace(/,\s*([}\]])/g, '$1');
+        //   // 3. 处理尾部多余的逗号
+        //   fixedJsonStr = fixedJsonStr.replace(/,\s*([}\]])/g, '$1');
           
-          // 4. 处理字符串中的换行符
-          fixedJsonStr = fixedJsonStr.replace(/(["])([^"]*?)[\n\r]+([^"]*?)(["])/g, '$1$2 $3$4');
+        //   // 4. 处理字符串中的换行符
+        //   fixedJsonStr = fixedJsonStr.replace(/(["])([^"]*?)[\n\r]+([^"]*?)(["])/g, '$1$2 $3$4');
           
-          // 5. 尝试修复未闭合的引号和括号
-          const quotes = (fixedJsonStr.match(/"/g) || []).length;
-          if (quotes % 2 !== 0) {
-            console.warn('⚠️ 检测到未闭合的引号，尝试修复');
-            // 寻找最后一个引号的位置
-            const lastQuoteIndex = fixedJsonStr.lastIndexOf('"');
-            if (lastQuoteIndex !== -1) {
-              // 在字符串末尾添加引号
-              fixedJsonStr += '"';
-            }
-          }
+        //   // 5. 尝试修复未闭合的引号和括号
+        //   const quotes = (fixedJsonStr.match(/"/g) || []).length;
+        //   if (quotes % 2 !== 0) {
+        //     console.warn('⚠️ 检测到未闭合的引号，尝试修复');
+        //     // 寻找最后一个引号的位置
+        //     const lastQuoteIndex = fixedJsonStr.lastIndexOf('"');
+        //     if (lastQuoteIndex !== -1) {
+        //       // 在字符串末尾添加引号
+        //       fixedJsonStr += '"';
+        //     }
+        //   }
           
-          const openBraces = (fixedJsonStr.match(/{/g) || []).length;
-          const closeBraces = (fixedJsonStr.match(/}/g) || []).length;
-          if (openBraces > closeBraces) {
-            console.warn(`⚠️ 检测到未闭合的大括号，尝试修复 (开:{${openBraces}, 闭:${closeBraces})`);
-            // 在字符串末尾添加缺少的大括号
-            for (let i = 0; i < openBraces - closeBraces; i++) {
-              fixedJsonStr += '}';
-            }
-          }
+        //   const openBraces = (fixedJsonStr.match(/{/g) || []).length;
+        //   const closeBraces = (fixedJsonStr.match(/}/g) || []).length;
+        //   if (openBraces > closeBraces) {
+        //     console.warn(`⚠️ 检测到未闭合的大括号，尝试修复 (开:{${openBraces}, 闭:${closeBraces})`);
+        //     // 在字符串末尾添加缺少的大括号
+        //     for (let i = 0; i < openBraces - closeBraces; i++) {
+        //       fixedJsonStr += '}';
+        //     }
+        //   }
           
-          const openBrackets = (fixedJsonStr.match(/\[/g) || []).length;
-          const closeBrackets = (fixedJsonStr.match(/\]/g) || []).length;
-          if (openBrackets > closeBrackets) {
-            console.warn(`⚠️ 检测到未闭合的方括号，尝试修复 (开:[${openBrackets}, 闭:${closeBrackets})`);
-            // 在字符串末尾添加缺少的方括号
-            for (let i = 0; i < openBrackets - closeBrackets; i++) {
-              fixedJsonStr += ']';
-            }
-          }
+        //   const openBrackets = (fixedJsonStr.match(/\[/g) || []).length;
+        //   const closeBrackets = (fixedJsonStr.match(/\]/g) || []).length;
+        //   if (openBrackets > closeBrackets) {
+        //     console.warn(`⚠️ 检测到未闭合的方括号，尝试修复 (开:[${openBrackets}, 闭:${closeBrackets})`);
+        //     // 在字符串末尾添加缺少的方括号
+        //     for (let i = 0; i < openBrackets - closeBrackets; i++) {
+        //       fixedJsonStr += ']';
+        //     }
+        //   }
           
-          try {
-            normalizedData = JSON.parse(fixedJsonStr);
-            console.log('✅ 修复后解析成功');
-            addAnalysisLog(`JSON格式问题已自动修复`, "success");
-          } catch (innerParseError) {
-            // 如果第一次修复失败，尝试更激进的修复方法
-            console.error('❌ 第一次修复失败，尝试更激进的修复:', innerParseError);
+        //   try {
+        //     normalizedData = JSON.parse(fixedJsonStr);
+        //     console.log('✅ 修复后解析成功');
+        //     addAnalysisLog(`JSON格式问题已自动修复`, "success");
+        //   } catch (innerParseError) {
+        //     // 如果第一次修复失败，尝试更激进的修复方法
+        //     console.error('❌ 第一次修复失败，尝试更激进的修复:', innerParseError);
             
-            try {
-              // 尝试提取最外层的JSON对象
-              const objectMatch = fixedJsonStr.match(/{[^]*?}/);
-              if (objectMatch && objectMatch[0]) {
-                const extractedObject = objectMatch[0];
-                normalizedData = JSON.parse(extractedObject);
-                console.log('✅ 从字符串中提取JSON对象成功');
-                addAnalysisLog(`从损坏的JSON中提取有效数据成功`, "success");
-              } else {
-                // 如果无法提取完整对象，则尝试创建一个最小可用的对象
-                normalizedData = {}; // 空对象作为后备
-                console.warn('⚠️ 无法提取完整JSON对象，使用空对象');
-                addAnalysisLog(`无法修复JSON，将使用部分数据`, "warning");
-              }
-            } catch (lastResortError) {
-              console.error('❌ 所有修复尝试失败，使用原始字符串:', lastResortError);
+        //     try {
+        //       // 尝试提取最外层的JSON对象
+        //       const objectMatch = fixedJsonStr.match(/{[^]*?}/);
+        //       if (objectMatch && objectMatch[0]) {
+        //         const extractedObject = objectMatch[0];
+        //         normalizedData = JSON.parse(extractedObject);
+        //         console.log('✅ 从字符串中提取JSON对象成功');
+        //         addAnalysisLog(`从损坏的JSON中提取有效数据成功`, "success");
+        //       } else {
+        //         // 如果无法提取完整对象，则尝试创建一个最小可用的对象
+        //         normalizedData = {}; // 空对象作为后备
+        //         console.warn('⚠️ 无法提取完整JSON对象，使用空对象');
+        //         addAnalysisLog(`无法修复JSON，将使用部分数据`, "warning");
+        //       }
+        //     } catch (lastResortError) {
+        //       console.error('❌ 所有修复尝试失败，使用原始字符串:', lastResortError);
               
-              // 最后的尝试：将整个字符串作为单个字段的值
-              normalizedData = { rawData: jsonStructure };
-              addAnalysisLog(`无法解析JSON，将保留原始数据以备后用`, "warning");
-            }
-          }
-        } catch (fixError) {
-          console.error('❌ 修复JSON失败，创建后备对象:', fixError);
-          // 创建一个最小的可用对象
-          normalizedData = {};
-          addAnalysisLog(`JSON解析失败: ${fixError instanceof Error ? fixError.message : '未知错误'}, 使用空对象`, "error");
-        }
+        //       // 最后的尝试：将整个字符串作为单个字段的值
+        //       normalizedData = { rawData: jsonStructure };
+        //       addAnalysisLog(`无法解析JSON，将保留原始数据以备后用`, "warning");
+        //     }
+        //   }
+        // } catch (fixError) {
+        //   console.error('❌ 修复JSON失败，创建后备对象:', fixError);
+        //   // 创建一个最小的可用对象
+        //   normalizedData = {};
+        //   addAnalysisLog(`JSON解析失败: ${fixError instanceof Error ? fixError.message : '未知错误'}, 使用空对象`, "error");
+        // }
       }
     } else {
       // 如果已经是对象，直接使用
